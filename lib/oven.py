@@ -241,7 +241,7 @@ class TempTracker:
     """Sliding window of temperatures (median)."""
     def __init__(self):
         self.size = int(getattr(config, "temperature_average_samples", 10))
-        self.temps = [0 for _ in range(self.size)]
+        self.temps = []
 
     def add(self, temp):
         self.temps.append(temp)
@@ -249,6 +249,8 @@ class TempTracker:
             del self.temps[0]
 
     def get_avg_temp(self, chop=25):
+        if not self.temps:
+            return 0
         # Using median is robust against spikes
         return statistics.median(self.temps)
 
@@ -397,7 +399,14 @@ class Max31855(TempSensorReal):
         fault_flag = (v >> 16) & 0x1
         fault_bits = v & 0x7
         if fault_flag:
-            raise Max31855_Error(f"fault={fault_bits} raw=0x{v:08x}")
+            if fault_bits & 0x1:
+                raise Max31855_Error("thermocouple not connected")
+            elif fault_bits & 0x2:
+                raise Max31855_Error("short circuit to ground")
+            elif fault_bits & 0x4:
+                raise Max31855_Error("short circuit to power")
+            else:
+                raise Max31855_Error(f"fault={fault_bits} raw=0x{v:08x}")
 
         tc = (v >> 18) & 0x3FFF
         if tc & 0x2000:  # sign
@@ -1072,6 +1081,8 @@ class PID:
         else:
             icomp = (error * timeDelta * (1 / self.ki))
             self.iterm += icomp
+            if getattr(config, "stop_integral_windup", False):
+                self.iterm = max(-window_size, min(window_size, self.iterm))
             dErr = (error - self.lastErr) / timeDelta
             output = self.kp * error + self.iterm + self.kd * dErr
             output = sorted([-1 * window_size, output, window_size])[1]
