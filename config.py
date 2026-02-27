@@ -18,6 +18,8 @@ spi_max_speed_hz = 100000
 # ----- Runtime settings -----
 simulate = False
 sensor_time_wait = 2
+sensor_read_retries = 3       # number of retry attempts on a failed temp read
+sensor_retry_delay = 0.05     # seconds to wait between retries (helps with EMI glitches)
 
 # ----- Outputs -----
 import board

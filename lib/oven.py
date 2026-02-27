@@ -188,26 +188,41 @@ class TempSensorReal(TempSensor):
             log.info("Hardware SPI selected for reading thermocouple")
 
     def get_temperature(self):
-        """Read from the thermocouple and convert to configured scale."""
-        try:
-            temp_c = self.raw_temp()  # subclasses implement raw_temp() returning C
-            scale = getattr(config, "temp_scale", "f").lower()
-            if scale == "f":
-                temp = (temp_c * 9 / 5) + 32
-            else:
-                temp = temp_c
+        """Read from the thermocouple and convert to configured scale.
+        Retries up to sensor_read_retries times on failure to recover from
+        transient EMI-induced read errors."""
+        retries = int(getattr(config, "sensor_read_retries", 3))
+        retry_delay = float(getattr(config, "sensor_retry_delay", 0.05))
+        last_error = None
 
-            self.status.good()
-            return temp
+        for attempt in range(retries + 1):
+            try:
+                temp_c = self.raw_temp()  # subclasses implement raw_temp() returning C
+                scale = getattr(config, "temp_scale", "f").lower()
+                if scale == "f":
+                    temp = (temp_c * 9 / 5) + 32
+                else:
+                    temp = temp_c
 
-        except ThermocoupleError as tce:
-            if tce.ignore:
-                log.error("Problem reading temp (ignored) %s", tce.message)
+                if attempt > 0:
+                    log.info("Temp read succeeded on retry %d", attempt)
                 self.status.good()
-            else:
-                log.error("Problem reading temp %s", tce.message)
-                self.status.bad()
+                return temp
 
+            except ThermocoupleError as tce:
+                last_error = tce
+                if tce.ignore:
+                    log.error("Problem reading temp (ignored) %s", tce.message)
+                    self.status.good()
+                    return None
+                if attempt < retries:
+                    log.warning("Temp read failed (attempt %d/%d): %s — retrying",
+                                attempt + 1, retries + 1, tce.message)
+                    time.sleep(retry_delay)
+
+        log.error("Temp read failed after %d attempts: %s", retries + 1,
+                  last_error.message if last_error else "unknown error")
+        self.status.bad()
         return None
 
     def temperature(self):
