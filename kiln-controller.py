@@ -49,7 +49,7 @@ def state():
     return bottle.redirect('/picoreflow/state.html')
 
 @app.get('/api/stats')
-def handle_api():
+def handle_api_stats():
     log.info("/api/stats command received")
     if hasattr(oven,'pid'):
         if hasattr(oven.pid,'pidstats'):
@@ -139,7 +139,7 @@ def get_websocket_from_request():
     env = bottle.request.environ
     wsock = env.get('wsgi.websocket')
     if not wsock:
-        abort(400, 'Expected WebSocket request.')
+        bottle.abort(400, 'Expected WebSocket request.')
     return wsock
 
 
@@ -159,8 +159,8 @@ def handle_control():
                     if profile_obj:
                         profile_json = json.dumps(profile_obj)
                         profile = Profile(profile_json)
-                    oven.run_profile(profile)
-                    ovenWatcher.record(profile)
+                        oven.run_profile(profile)
+                        ovenWatcher.record(profile)
                 elif msgdict.get("cmd") == "SIMULATE":
                     log.info("SIMULATE command received")
                     #profile_obj = msgdict.get('profile')

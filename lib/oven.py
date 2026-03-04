@@ -836,6 +836,7 @@ class Oven(threading.Thread):
                 self.update_runtime()
                 self.update_target_temp()
                 self.heat_then_cool()
+                self.update_cost()
                 self.reset_if_emergency()
                 self.reset_if_schedule_ended()
                 continue
@@ -1023,6 +1024,8 @@ class Profile:
         next_point = None
         for i in range(len(self.data)):
             if t < self.data[i][0]:
+                if i == 0:
+                    break
                 prev_point = self.data[i - 1]
                 next_point = self.data[i]
                 break

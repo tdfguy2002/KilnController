@@ -37,32 +37,24 @@ ac_freq_50hz = False
 thermocouple_type = "K"
 pid_control_window = 25   # degrees F
 
-
-# ----- From ChatGPT ----- 
+# ----- EMA smoothing for MAX31856 -----
 tc_ema_alpha = 0.2
 
+# ----- Automatic restart on power loss -----
 automatic_restarts = True
 automatic_restart_state_file = os.path.abspath(os.path.join(os.path.dirname(__file__), 'state.json'))
+
+# ----- Profiles directory -----
 kiln_profiles_directory = os.path.abspath(os.path.join(os.path.dirname(__file__), "storage", "profiles"))
 
-temp_scale = "F"
+# ----- UI / display -----
+temp_scale = "f"          # "f" or "c" (must be lowercase)
 
 # ----- Time scaling for firing schedules -----
 time_scale_slope = 1.0
 time_scale_intercept = 0.0
-time_scale_slope = 1.0
-time_scale_intercept = 0.0
-time_scale_profile = False
-# ----- UI / display -----
-temp_scale = "F"          # "F" or "C"
-
-# ----- Time scaling (optional feature) -----
-time_scale_slope = 1.0
 time_scale_profile = False
 
-# ----- Cost / energy display (optional feature) -----
-kwh_rate = 0.209           # cost per kWh (set to your utility rate if you want)
-currency_type = "USD"     # e.g. "USD"
-
-# ----- Profiles directory -----
-kiln_profiles_directory = "/home/pi/kiln-controller/storage/profiles"
+# ----- Cost / energy display -----
+kwh_rate = 0.209           # cost per kWh
+currency_type = "USD"
