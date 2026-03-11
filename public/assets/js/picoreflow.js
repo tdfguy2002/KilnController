@@ -59,6 +59,55 @@ function updateProfile(id)
     $('#sel_prof_cost').html(kwh + ' kWh ('+ currency_type +': '+ cost +')');
     graph.profile.data = profiles[id].data;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ] , getOptions());
+    updateScheduleDisplay(profiles[id].data);
+}
+
+function updateScheduleDisplay(data)
+{
+    var tbody = $('#schedule_tbody');
+    tbody.empty();
+
+    if (!data || data.length === 0) {
+        tbody.append('<tr><td colspan="4" style="text-align:center;">No waypoints</td></tr>');
+        return;
+    }
+
+    for (var i = 0; i < data.length; i++) {
+        var secs = parseInt(data[i][0]);
+        var temp = data[i][1];
+
+        var hrs  = Math.floor(secs / 3600);
+        var mins = Math.floor((secs % 3600) / 60);
+        var timeStr = hrs + ':' + (mins < 10 ? '0' : '') + mins;
+
+        var rateStr = '&mdash;';
+        var rateClass = '';
+        if (i > 0) {
+            var dt = data[i][0] - data[i-1][0];
+            var dtemp = data[i][1] - data[i-1][1];
+            if (dt > 0) {
+                var rate = Math.round(dtemp / dt * 3600);
+                if (rate > 0) {
+                    rateStr = '+' + rate + '&deg;/hr';
+                    rateClass = 'rate-up';
+                } else if (rate < 0) {
+                    rateStr = rate + '&deg;/hr';
+                    rateClass = 'rate-down';
+                } else {
+                    rateStr = 'hold';
+                    rateClass = 'rate-hold';
+                }
+            }
+        }
+
+        var row = '<tr>' +
+            '<td class="sched-num">' + (i + 1) + '</td>' +
+            '<td class="sched-time">' + timeStr + '</td>' +
+            '<td class="sched-temp">' + temp + '&deg;</td>' +
+            '<td class="sched-rate ' + rateClass + '">' + rateStr + '</td>' +
+            '</tr>';
+        tbody.append(row);
+    }
 }
 
 function deleteProfile()
