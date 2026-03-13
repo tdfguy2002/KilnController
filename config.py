@@ -57,4 +57,4 @@ time_scale_profile = False
 
 # ----- Cost / energy display -----
 kwh_rate = 0.209           # cost per kWh
-currency_type = "USD"
+currency_type = "$"
