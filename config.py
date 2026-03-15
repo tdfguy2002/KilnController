@@ -57,4 +57,5 @@ time_scale_profile = False
 
 # ----- Cost / energy display -----
 kwh_rate = 0.209           # cost per kWh
+kw_elements = 7.8          # Skutt 183-27/250: 7800W total
 currency_type = "$"

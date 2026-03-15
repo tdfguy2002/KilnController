@@ -44,7 +44,7 @@
     <div class="display ds-num ds-heat-rate"><span id="heat_rate">---</span><span class="ds-unit" id="heat_rate_temp_scale">&deg;C</span></div>
     <div class="display ds-num ds-cost"><span id="cost">0.00</span><span class="ds-unit" id="cost"></span></div>
     <div class="display ds-num ds-text" id="state"></div>
-    <div class="display pull-right ds-state" style="padding-right:0"><span class="ds-led" id="heat">&#92;</span><span class="ds-led" id="cool">&#108;</span><span class="ds-led" id="air">&#91;</span><span class="ds-led" id="hazard">&#73;</span><span class="ds-led" id="door">&#9832;</span></div>
+    <div class="display pull-right ds-state" style="padding-right:0"><span class="ds-led" id="heat">&#92;</span><span class="ds-led" id="cool">&#108;</span><span class="ds-led" id="air">&#91;</span><span class="ds-led" id="hazard">&#73;</span><span class="ds-led" id="door">&#126;</span></div>
    </div>
    <div class="clearfix"></div>
    <div>
@@ -61,6 +61,7 @@
      <select id="e2" class="select2" style="margin-top: 4px"></select>
      <button id="btn_edit" type="button" class="btn btn-default" onclick="enterEditMode()"><span class="glyphicon glyphicon-edit"></span></button>
      <button id="btn_new" type="button" class="btn btn-default" onclick="enterNewMode(selected_profile)"><span class="glyphicon glyphicon-plus"></span></button>
+     <button id="btn_build" type="button" class="btn btn-default" onclick="openScheduleBuilder()" title="Build new schedule"><span class="glyphicon glyphicon-th-list"></span></button>
     </div>
    <div id="btn_controls" class="pull-right" style="margin-top: 3px">
     <div id="nav_start" class="btn-group" style="display:none">
@@ -154,6 +155,59 @@
      <div class="btn-group" style="width: 100%">
       <button type="button" class="btn btn-danger" style="width: 50%" data-dismiss="modal">No, take me back</button>
       <button type="button" class="btn btn-success" style="width: 50%" data-dismiss="modal" onclick="deleteProfile()">Yes, delete the profile</button>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <div id="scheduleBuilderModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog modal-lg">
+   <div class="modal-content">
+    <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+     <h3 class="modal-title">Build Schedule</h3>
+    </div>
+    <div class="modal-body">
+     <div class="sb-header-row">
+      <div class="input-group sb-name-group">
+       <span class="input-group-addon">Name</span>
+       <input id="sb-profile-name" type="text" class="form-control" placeholder="e.g. cone-6-glaze">
+      </div>
+      <div class="input-group sb-start-group">
+       <span class="input-group-addon">Start Temp</span>
+       <input id="sb-start-temp" type="number" class="form-control" value="65">
+       <span class="input-group-addon" id="sb-start-unit">°F</span>
+      </div>
+     </div>
+     <table class="table sb-table">
+      <thead>
+       <tr>
+        <th>From</th>
+        <th>Target</th>
+        <th>Rate (°/hr)</th>
+        <th>Duration</th>
+        <th>Hold (min)</th>
+        <th>Description</th>
+        <th></th>
+       </tr>
+      </thead>
+      <tbody id="sb-tbody"></tbody>
+      <tfoot>
+       <tr>
+        <td colspan="7">
+         <button class="btn btn-default btn-sm" onclick="sbAddRow()"><span class="glyphicon glyphicon-plus"></span> Add Segment</button>
+         <span id="sb-total" class="sb-total"></span>
+        </td>
+       </tr>
+      </tfoot>
+     </table>
+     <p class="sb-hint">Tip: click a calculated value to switch between entering rate or duration for that segment.</p>
+    </div>
+    <div class="modal-footer">
+     <div class="btn-group" style="width: 100%">
+      <button type="button" class="btn btn-danger" style="width: 50%" data-dismiss="modal">Cancel</button>
+      <button type="button" class="btn btn-success" style="width: 50%" onclick="sbSave()">Save Schedule</button>
      </div>
     </div>
    </div>

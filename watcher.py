@@ -6,18 +6,17 @@ import datetime
 import logging
 
 # this monitors your kiln stats every N seconds
-# if X checks fail, an alert is sent to a slack channel
-# configure an incoming web hook on the slack channel
-# set slack_hook_url to that
+# if X checks fail, an alert is sent via ntfy.sh
+# install the ntfy app on your phone and subscribe to your topic
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 class Watcher(object):
 
-    def __init__(self,kiln_url,slack_hook_url,bad_check_limit=6,temp_error_limit=10,sleepfor=10):
+    def __init__(self,kiln_url,ntfy_topic,bad_check_limit=6,temp_error_limit=10,sleepfor=10):
         self.kiln_url = kiln_url
-        self.slack_hook_url = slack_hook_url
+        self.ntfy_url = "https://ntfy.sh/" + ntfy_topic
         self.bad_check_limit = bad_check_limit
         self.temp_error_limit = temp_error_limit
         self.sleepfor = sleepfor
@@ -39,8 +38,8 @@ class Watcher(object):
 
     def send_alert(self,msg):
         log.error("sending alert: %s" % msg)
-        try: 
-            r = requests.post(self.slack_hook_url, json={'text': msg })
+        try:
+            requests.post(self.ntfy_url, data=msg, headers={"Title": "Kiln Alert"})
         except:
             pass
 
@@ -52,7 +51,11 @@ class Watcher(object):
             if abs(self.stats['err']) > self.temp_error_limit:
                 log.error("temp out of whack %0.2f" % self.stats['err'])
                 return True
-        return False 
+        if 'tc_error_pct' in self.stats:
+            if self.stats['tc_error_pct'] > 0:
+                log.error("thermocouple read errors: %.1f%%" % self.stats['tc_error_pct'])
+                return True
+        return False
 
     def run(self):
         log.info("started watching %s" % self.kiln_url)
@@ -76,8 +79,8 @@ class Watcher(object):
 if __name__ == "__main__":
 
     watcher = Watcher(
-        kiln_url = "http://192.168.1.84:8081/api/stats",
-        slack_hook_url = "you must add this",
+        kiln_url = "http://localhost:8081/api/stats",
+        ntfy_topic = "skutt-kiln",
         bad_check_limit = 6,
         temp_error_limit = 10,
         sleepfor = 10 )

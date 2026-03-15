@@ -103,7 +103,7 @@ function updateScheduleDisplay(data)
         var row = '<tr>' +
             '<td class="sched-num">' + (i + 1) + '</td>' +
             '<td class="sched-time">' + timeStr + '</td>' +
-            '<td class="sched-temp">' + temp + '&deg;</td>' +
+            '<td class="sched-temp">' + Math.round(temp) + '&deg;</td>' +
             '<td class="sched-rate ' + rateClass + '">' + rateStr + '</td>' +
             '</tr>';
         tbody.append(row);
@@ -607,7 +607,7 @@ $(document).ready(function()
                     eta = new Date(left * 1000).toISOString().substr(11, 8);
 
                     updateProgress(parseFloat(x.runtime)/parseFloat(x.totaltime)*100);
-                    $('#state').html('<span style="font-family: Digi; font-size: 40px;">' + eta + '</span>');
+                    $('#state').html(eta);
                     $('#target_temp').html(parseInt(x.target));
                     $('#cost').html(x.currency_type + parseFloat(x.cost).toFixed(2));
                   
@@ -626,9 +626,7 @@ $(document).ready(function()
                 if (heat_rate > 9999) { heat_rate = 9999; }
                 if (heat_rate < -9999) { heat_rate = -9999; }
                 $('#heat_rate').html(heat_rate);
-                if (typeof x.pidstats !== 'undefined') {
-                    $('#heat').html('<div class="bar" style="height:'+x.pidstats.out*70+'%;"></div>')
-                    }
+                if (x.heat > 0.5) { $('#heat').addClass("ds-led-heat-active"); } else { $('#heat').removeClass("ds-led-heat-active"); }
                 if (x.cool > 0.5) { $('#cool').addClass("ds-led-cool-active"); } else { $('#cool').removeClass("ds-led-cool-active"); }
                 if (x.air > 0.5) { $('#air').addClass("ds-led-air-active"); } else { $('#air').removeClass("ds-led-air-active"); }
                 if (x.temperature > hazardTemp()) { $('#hazard').addClass("ds-led-hazard-active"); } else { $('#hazard').removeClass("ds-led-hazard-active"); }
@@ -774,3 +772,165 @@ $(document).ready(function()
 
     }
 });
+
+// ============================================================
+// SCHEDULE BUILDER
+// ============================================================
+
+var sbData = { name: '', startTemp: 65, rows: [] };
+
+function openScheduleBuilder() {
+    var curTemp = parseInt($('#act_temp').text());
+    if (isNaN(curTemp)) curTemp = (temp_scale === 'f') ? 65 : 18;
+    sbData = {
+        name: '',
+        startTemp: curTemp,
+        rows: [
+            { to: (temp_scale === 'f') ? 200 : 93, rate: (temp_scale === 'f') ? 300 : 167, hold: 0, mode: 'rate', desc: '' }
+        ]
+    };
+    $('#sb-profile-name').val('');
+    $('#sb-start-temp').val(sbData.startTemp);
+    $('#sb-start-unit').text('°' + temp_scale_display);
+    $('#sb-start-temp').off('change').on('change', function() {
+        sbRenderRows();
+    });
+    sbRenderRows();
+    $('#scheduleBuilderModal').modal('show');
+}
+
+function sbFromTemp(idx) {
+    if (idx === 0) return parseFloat($('#sb-start-temp').val()) || sbData.startTemp;
+    return sbData.rows[idx - 1].to;
+}
+
+function sbCalcDuration(from, to, rate) {
+    if (!rate || rate <= 0) return 0;
+    return Math.abs(to - from) / rate * 60;
+}
+
+function sbCalcRate(from, to, durationMin) {
+    if (!durationMin || durationMin <= 0) return 0;
+    return Math.abs(to - from) / (durationMin / 60);
+}
+
+function sbFormatDuration(minutes) {
+    var h = Math.floor(minutes / 60);
+    var m = Math.round(minutes % 60);
+    return h + 'h ' + String(m).padStart(2, '0') + 'm';
+}
+
+function sbRenderRows() {
+    var html = '';
+    var totalMin = 0;
+
+    sbData.rows.forEach(function(row, i) {
+        var from = sbFromTemp(i);
+        var durationMin = (row.mode === 'rate') ? sbCalcDuration(from, row.to, row.rate) : (row.duration || 0);
+        var rate = (row.mode === 'rate') ? row.rate : sbCalcRate(from, row.to, row.duration);
+        totalMin += durationMin + (row.hold || 0);
+
+        var rateCell = (row.mode === 'rate')
+            ? '<input class="form-control sb-input sb-rate-input" type="number" min="1" value="' + Math.round(rate) + '" data-row="' + i + '">'
+            : '<span class="sb-calc" data-row="' + i + '" title="Click to enter rate">' + Math.round(rate) + '</span>';
+
+        var durCell = (row.mode === 'rate')
+            ? '<span class="sb-calc" data-row="' + i + '" title="Click to enter duration">' + sbFormatDuration(durationMin) + '</span>'
+            : '<input class="form-control sb-input sb-dur-input" type="number" min="1" value="' + Math.round(durationMin) + '" data-row="' + i + '" placeholder="min">';
+
+        html += '<tr data-row="' + i + '">' +
+            '<td class="sb-from-cell"><input class="form-control sb-input" type="text" readonly value="' + Math.round(from) + '" style="background:transparent;cursor:default;"></td>' +
+            '<td><input class="form-control sb-input sb-to-input" type="number" value="' + row.to + '" data-row="' + i + '"></td>' +
+            '<td>' + rateCell + '</td>' +
+            '<td>' + durCell + '</td>' +
+            '<td><input class="form-control sb-input sb-hold-input" type="number" min="0" value="' + (row.hold || 0) + '" data-row="' + i + '"></td>' +
+            '<td><input class="form-control sb-input sb-desc-input" type="text" value="' + (row.desc || '') + '" data-row="' + i + '" placeholder="e.g. candling"></td>' +
+            '<td><button class="btn btn-xs sb-delete-btn" data-row="' + i + '">×</button></td>' +
+        '</tr>';
+    });
+
+    $('#sb-tbody').html(html);
+
+    var totalH = Math.floor(totalMin / 60);
+    var totalM = Math.round(totalMin % 60);
+    $('#sb-total').text('Total: ' + totalH + 'h ' + String(totalM).padStart(2, '0') + 'm');
+
+    $('#sb-tbody .sb-to-input').on('change', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows[i].to = parseFloat($(this).val()) || 0;
+        sbRenderRows();
+    });
+    $('#sb-tbody .sb-rate-input').on('change', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows[i].rate = parseFloat($(this).val()) || 0;
+        sbRenderRows();
+    });
+    $('#sb-tbody .sb-dur-input').on('change', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows[i].duration = parseFloat($(this).val()) || 0;
+        sbRenderRows();
+    });
+    $('#sb-tbody .sb-hold-input').on('change', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows[i].hold = parseFloat($(this).val()) || 0;
+        sbRenderRows();
+    });
+    $('#sb-tbody .sb-calc').on('click', function() {
+        var i = parseInt($(this).data('row'));
+        var from = sbFromTemp(i);
+        var row = sbData.rows[i];
+        if (row.mode === 'rate') {
+            row.duration = Math.round(sbCalcDuration(from, row.to, row.rate));
+            row.mode = 'duration';
+        } else {
+            row.rate = Math.round(sbCalcRate(from, row.to, row.duration));
+            row.mode = 'rate';
+        }
+        sbRenderRows();
+    });
+    $('#sb-tbody .sb-desc-input').on('change', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows[i].desc = $(this).val();
+    });
+    $('#sb-tbody .sb-delete-btn').on('click', function() {
+        var i = parseInt($(this).data('row'));
+        sbData.rows.splice(i, 1);
+        sbRenderRows();
+    });
+}
+
+function sbAddRow() {
+    var last = sbData.rows[sbData.rows.length - 1];
+    var prevTo = last ? last.to : (parseFloat($('#sb-start-temp').val()) || sbData.startTemp);
+    sbData.rows.push({ to: prevTo, rate: (temp_scale === 'f') ? 100 : 55, hold: 0, mode: 'rate', desc: '' });
+    sbRenderRows();
+}
+
+function sbSave() {
+    var name = $('#sb-profile-name').val().trim();
+    if (!name) { alert('Please enter a schedule name.'); return; }
+    if (sbData.rows.length === 0) { alert('Please add at least one segment.'); return; }
+
+    var startTemp = parseFloat($('#sb-start-temp').val()) || sbData.startTemp;
+    var startTempC = (temp_scale === 'f') ? (startTemp - 32) * 5 / 9 : startTemp;
+    var waypoints = [[0, startTempC]];
+    var elapsed = 0;
+
+    sbData.rows.forEach(function(row, i) {
+        var from = sbFromTemp(i);
+        var durationMin = (row.mode === 'rate') ? sbCalcDuration(from, row.to, row.rate) : (row.duration || 0);
+        elapsed += durationMin * 60;
+        var toTempC = (temp_scale === 'f') ? (row.to - 32) * 5 / 9 : row.to;
+        waypoints.push([Math.round(elapsed), toTempC]);
+        if (row.hold && row.hold > 0) {
+            elapsed += row.hold * 60;
+            waypoints.push([Math.round(elapsed), toTempC]);
+        }
+    });
+
+    var labels = sbData.rows.map(function(r) { return r.desc || ''; });
+    var profile = { "type": "profile", "data": waypoints, "name": name, "temp_units": "c", "segment_labels": labels };
+    ws_storage.send(JSON.stringify({ "cmd": "PUT", "profile": profile }));
+    $('#scheduleBuilderModal').modal('hide');
+    ws_storage.send('GET');
+}

@@ -697,9 +697,13 @@ body::before {
 }
 
 .sched-rate {
-    font-size: 17px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.04em;
+    font-family: "Digi" !important;
+    font-size: 26px !important;
+    line-height: 1 !important;
+    color: var(--amber) !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    text-align: left;
 }
 
 .rate-up   { color: #c0541a !important; }
@@ -721,4 +725,241 @@ body::before {
     font-size: 12px;
     background-color: var(--danger);
     color: #fff;
+}
+
+/* ============================================================
+   SCHEDULE BUILDER
+   ============================================================ */
+
+#scheduleBuilderModal {
+    width: calc(100vw - 40px) !important;
+    max-width: 1300px !important;
+    left: 50% !important;
+    right: auto !important;
+    margin-left: 0 !important;
+    transform: translateX(-50%) !important;
+}
+#scheduleBuilderModal .modal-dialog {
+    width: 100% !important;
+    margin: 0 !important;
+}
+#scheduleBuilderModal .modal-content {
+    background: #1a2236;
+    border: 2px solid rgba(238, 108, 32, 0.5);
+    border-radius: 8px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 60px rgba(238,108,32,0.08);
+}
+#scheduleBuilderModal .modal-header {
+    background: #111827;
+    border-bottom: 2px solid rgba(238, 108, 32, 0.4);
+    border-radius: 6px 6px 0 0;
+    padding: 20px 28px;
+}
+#scheduleBuilderModal .modal-title {
+    font-size: 24px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+#scheduleBuilderModal .close {
+    color: var(--text-dim);
+    opacity: 1;
+    font-size: 24px;
+    margin-top: 2px;
+}
+#scheduleBuilderModal .modal-body {
+    padding: 28px;
+    background: #1a2236;
+    overflow-x: auto;
+}
+#scheduleBuilderModal .modal-footer {
+    background: #111827;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 16px 28px;
+    border-radius: 0 0 6px 6px;
+}
+
+/* Header row: Name + Start Temp */
+.sb-header-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+.sb-name-group  { flex: 1 1 400px; }
+.sb-start-group { flex: 0 0 280px; }
+.sb-header-row .input-group-addon {
+    font-size: 13px;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0 18px;
+    background: #111827 !important;
+    color: #8a9aaa !important;
+    border-color: rgba(255,255,255,0.12) !important;
+    white-space: nowrap;
+}
+.sb-header-row .form-control {
+    font-size: 17px;
+    height: 48px;
+    background: #0d1520 !important;
+    color: #ffffff !important;
+    border-color: rgba(255,255,255,0.15) !important;
+}
+.sb-header-row .form-control:focus {
+    border-color: var(--amber) !important;
+    box-shadow: 0 0 0 2px rgba(238,108,32,0.2) !important;
+}
+
+/* Segment table */
+.sb-table {
+    background: #0d1520;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    width: 100%;
+    table-layout: fixed;
+}
+.sb-table thead th {
+    background: #111827;
+    color: var(--amber);
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(238,108,32,0.3);
+    padding: 14px 16px;
+    white-space: nowrap;
+}
+.sb-table thead th:nth-child(1) { width: 150px; }
+.sb-table thead th:nth-child(2) { width: 140px; }
+.sb-table thead th:nth-child(3) { width: 160px; }
+.sb-table thead th:nth-child(4) { width: 140px; }
+.sb-table thead th:nth-child(5) { width: 130px; }
+.sb-table thead th:nth-child(6) { width: auto; }
+.sb-table thead th:nth-child(7) { width: 52px; }
+
+.sb-table tbody tr {
+    background: #0d1520;
+}
+.sb-table tbody tr:nth-child(even) {
+    background: #111827;
+}
+.sb-table tbody td {
+    vertical-align: middle;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: none;
+    color: #ffffff;
+}
+.sb-table tfoot td {
+    padding: 14px 16px;
+    border-top: 2px solid rgba(255,255,255,0.08);
+    background: #111827;
+}
+
+.sb-from-cell {
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 600;
+    color: #c8d8e8;
+    white-space: nowrap;
+}
+.sb-unit {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #5a6a7a;
+    margin-left: 3px;
+}
+.sb-direction {
+    font-size: 13px;
+    margin-left: 6px;
+}
+.sb-dir-up   { color: #e07030; }
+.sb-dir-down { color: #4a90d0; }
+.sb-dir-hold { color: #5a6a7a; }
+
+.sb-input {
+    background: #1c2a3e !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    height: 44px !important;
+    padding: 8px 12px !important;
+    font-size: 16px !important;
+    font-family: var(--font-ui) !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    border-radius: 4px !important;
+}
+.sb-input:focus {
+    border-color: var(--amber) !important;
+    box-shadow: 0 0 0 2px rgba(238,108,32,0.25) !important;
+    outline: none;
+}
+
+.sb-calc {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    color: var(--amber);
+    font-family: var(--font-ui);
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(238,108,32,0.5);
+    padding: 0 4px;
+    white-space: nowrap;
+}
+.sb-calc:hover { color: #fff; border-bottom-color: #fff; }
+
+.sb-delete-btn {
+    background: rgba(184,48,48,0.15) !important;
+    border: 1px solid rgba(184,48,48,0.4) !important;
+    color: #c05050 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+}
+.sb-delete-btn:hover {
+    background: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: #fff !important;
+}
+
+.sb-total {
+    float: right;
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 34px;
+}
+
+.sb-hint {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #4a5a6a;
+    margin: 8px 0 0 0;
+}
+
+/* ============================================================
+   PHONE LANDSCAPE — shrink status bar to fit one row
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 500px) {
+    .ds-title-panel { height: 16px; }
+    .ds-title       { font-size: 6px; width: 65px; height: 16px; line-height: 16px; letter-spacing: 0.08em; }
+    .ds-title-cost  { width: 80px; }
+    .display        { font-size: 24px; height: 36px; line-height: 36px; padding-right: 4px; }
+    .ds-num         { width: 65px; }
+    .ds-cost        { width: 80px; }
+    .ds-text        { font-size: 24px; padding-left: 6px; padding-right: 6px; }
+    .ds-unit        { font-size: 9px; line-height: 24px; }
+    .ds-state       { width: 130px; }
+    .ds-led         { font-size: 22px; height: 36px; width: 26px; line-height: 36px; }
 }
