@@ -1,0 +1,8 @@
+{
+  "watcher_enabled": true,
+  "tc_error_alerts": true,
+  "temp_deviation_limit": 10,
+  "ntfy_topic": "skutt-kiln",
+  "kwh_rate": 0.209,
+  "currency_type": "$"
+}

@@ -6,6 +6,7 @@ import sys
 import logging
 import json
 
+import requests
 import bottle
 import gevent
 import geventwebsocket
@@ -24,6 +25,33 @@ log.info("Starting kiln controller")
 script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, script_dir + '/lib/')
 profile_path = config.kiln_profiles_directory
+settings_path = os.path.join(script_dir, 'settings.json')
+
+SETTINGS_DEFAULTS = {
+    "watcher_enabled": True,
+    "tc_error_alerts": True,
+    "temp_deviation_limit": 10,
+    "ntfy_topic": "skutt-kiln",
+    "kwh_rate": config.kwh_rate,
+    "currency_type": config.currency_type,
+}
+
+def load_settings():
+    try:
+        with open(settings_path, 'r') as f:
+            data = json.load(f)
+        merged = dict(SETTINGS_DEFAULTS)
+        merged.update(data)
+        return merged
+    except Exception:
+        return dict(SETTINGS_DEFAULTS)
+
+def save_settings(data):
+    merged = load_settings()
+    merged.update(data)
+    with open(settings_path, 'w') as f:
+        json.dump(merged, f, indent=2)
+    return merged
 
 from oven import SimulatedOven, RealOven, Profile
 from ovenWatcher import OvenWatcher
@@ -92,12 +120,44 @@ def handle_log():
 </body></html>'''.format(newer=newer, older=older, page=page, total_pages=total_pages, info=info, content=content)
 
 
+@app.get('/api/test_notification')
+def handle_test_notification():
+    s = load_settings()
+    topic = s.get('ntfy_topic', '')
+    if not topic:
+        return json.dumps({"success": False, "error": "No ntfy topic configured"})
+    try:
+        requests.post("https://ntfy.sh/" + topic, data="Test notification from Kiln Controller", headers={"Title": "Kiln Test"}, timeout=5)
+        return json.dumps({"success": True})
+    except Exception as e:
+        return json.dumps({"success": False, "error": str(e)})
+
+@app.get('/api/settings')
+def handle_get_settings():
+    bottle.response.content_type = 'application/json'
+    return json.dumps(load_settings())
+
+@app.post('/api/settings')
+def handle_post_settings():
+    try:
+        data = bottle.request.json
+        if not isinstance(data, dict):
+            bottle.response.status = 400
+            return json.dumps({"success": False, "error": "expected JSON object"})
+        updated = save_settings(data)
+        log.info("settings updated: %s" % json.dumps(data))
+        return json.dumps({"success": True, "settings": updated})
+    except Exception as e:
+        bottle.response.status = 500
+        return json.dumps({"success": False, "error": str(e)})
+
 @app.get('/api/stats')
 def handle_api_stats():
     log.info("/api/stats command received")
-    if hasattr(oven,'pid'):
-        if hasattr(oven.pid,'pidstats'):
-            return json.dumps(oven.pid.pidstats)
+    state = oven.get_state()
+    if hasattr(oven,'pid') and hasattr(oven.pid,'pidstats'):
+        state.update(oven.pid.pidstats)
+    return json.dumps(state)
 
 
 @app.post('/api')
@@ -143,6 +203,38 @@ def handle_api():
     if bottle.request.json['cmd'] == 'stop':
         log.info("api stop command received")
         oven.abort_run()
+
+    if bottle.request.json['cmd'] == 'schedule':
+        log.info("api schedule command received")
+        wanted = bottle.request.json['profile']
+        start_at = float(bottle.request.json['start_at'])
+        profile = find_profile(wanted)
+        if profile is None:
+            return { "success": False, "error": "profile %s not found" % wanted }
+        oven.scheduled_start = start_at
+        oven.state = 'SCHEDULED'
+        profile_json = json.dumps(profile)
+        scheduled_profile = Profile(profile_json)
+        def delayed_run():
+            delay = start_at - time.time()
+            if delay > 0:
+                gevent.sleep(delay)
+            if oven.state != 'SCHEDULED':
+                return
+            oven.scheduled_start = 0
+            oven.run_profile(scheduled_profile)
+            ovenWatcher.record(scheduled_profile)
+        gevent.spawn(delayed_run)
+
+    if bottle.request.json['cmd'] == 'cancel_schedule':
+        log.info("api cancel_schedule command received")
+        oven.scheduled_start = 0
+        oven.state = 'IDLE'
+
+    if bottle.request.json['cmd'] == 'alarm':
+        log.info("api alarm command received")
+        oven.alarm_temp = float(bottle.request.json.get('temp', 0))
+        log.info("alarm set to %s" % oven.alarm_temp)
 
     if bottle.request.json['cmd'] == 'memo':
         log.info("api memo command received")
@@ -378,11 +470,12 @@ def delete_profile(profile):
     return True
 
 def get_config():
+    s = load_settings()
     return json.dumps({"temp_scale": config.temp_scale,
         "time_scale_slope": config.time_scale_slope,
         "time_scale_profile": config.time_scale_profile,
-        "kwh_rate": config.kwh_rate,
-        "currency_type": config.currency_type})    
+        "kwh_rate": s.get("kwh_rate", config.kwh_rate),
+        "currency_type": s.get("currency_type", config.currency_type)})
 
 def main():
     ip = "0.0.0.0"

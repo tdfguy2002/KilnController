@@ -27,6 +27,14 @@
 </head>
 <body>
 
+ <nav class="kiln-nav">
+  <span class="kiln-nav-title">Kiln Controller</span>
+  <div class="kiln-nav-links">
+   <a href="/log" target="_blank" class="kiln-nav-link"><span class="glyphicon glyphicon-list-alt"></span> Log</a>
+   <a href="#" class="kiln-nav-link" onclick="openSettings(); return false;"><span class="glyphicon glyphicon-cog"></span> Settings</a>
+  </div>
+ </nav>
+
  <div class="container">
   <div id="status">
    <div class="ds-title-panel">
@@ -60,15 +68,14 @@
     <div id="profile_selector" class="pull-left">
      <select id="e2" class="select2" style="margin-top: 4px"></select>
      <button id="btn_edit" type="button" class="btn btn-default" onclick="openScheduleBuilderForEdit()" title="Edit schedule"><span class="glyphicon glyphicon-edit"></span></button>
-     <button id="btn_build" type="button" class="btn btn-default" onclick="openScheduleBuilder()" title="Build new schedule"><span class="glyphicon glyphicon-th-list"></span></button>
-     <a href="/log" target="_blank" class="btn btn-default" title="View log"><span class="glyphicon glyphicon-list-alt"></span></a>
+     <button id="btn_build" type="button" class="btn btn-default" onclick="openScheduleBuilder()" title="New schedule"><span class="glyphicon glyphicon-th-list"></span></button>
     </div>
-   <div id="btn_controls" class="pull-right" style="margin-top: 3px">
+   <div id="btn_controls" class="pull-right" style="margin-top: 3px; display:flex; align-items:center; gap:8px;">
     <div id="nav_start" class="btn-group" style="display:none">
-     <button type="button" class="btn btn-default" style="visibility: hidden;"  onclick="runTaskSimulation();">Simulate</button>
      <button type="button" class="btn btn-success" data-toggle="modal" data-target="#jobSummaryModal"><span class="glyphicon glyphicon-play"></span> Start</button>
     </div>
-    <button id="nav_stop" type="button" class="btn btn-danger" onclick="abortTask()" style="display:none" ><span class="glyphicon glyphicon-stop"></span> Stop</button>
+    <button id="nav_stop" type="button" class="btn btn-danger" onclick="abortTask()" style="display:none"><span class="glyphicon glyphicon-stop"></span> Stop</button>
+    <button id="nav_cancel_schedule" type="button" class="btn btn-warning" onclick="cancelSchedule()" style="display:none"><span class="glyphicon glyphicon-time"></span> Cancel Schedule</button>
    </div>
     <div id="edit" style="display:none;">
      <div class="input-group">
@@ -108,7 +115,7 @@
        <th>#</th>
        <th>Time</th>
        <th>Temperature</th>
-       <th>Segment</th>
+       <th>Hold</th>
        <th>Rate</th>
       </tr>
      </thead>
@@ -131,11 +138,32 @@
       <tr><td>Estimated Runtime</td><td><b><span id="sel_prof_eta"></span></b></td></tr>
       <tr><td>Estimated Power consumption</td><td><b><span id="sel_prof_cost"></span></b></td></tr>
      </table>
+     <div class="job-options">
+      <div class="job-option-row">
+       <label class="delayed-start-label">
+        <input type="checkbox" id="delayed_start_toggle" onchange="toggleDelayedStart()"> Delayed Start
+       </label>
+       <div id="delayed_start_picker" style="display:none; margin-top:6px;">
+        <input type="datetime-local" id="delayed_start_time" class="form-control delayed-start-input">
+       </div>
+      </div>
+      <div class="job-option-row">
+       <label class="delayed-start-label">
+        <input type="checkbox" id="alarm_toggle" onchange="toggleAlarmInput()"> Temperature Alarm
+       </label>
+       <div id="alarm_input_row" style="display:none; margin-top:6px;">
+        <div class="input-group alarm-group">
+         <span class="input-group-addon alarm-addon"><span class="glyphicon glyphicon-bell"></span></span>
+         <input id="alarm_temp" type="number" class="form-control alarm-input" placeholder="Alert at °">
+        </div>
+       </div>
+      </div>
+     </div>
     </div>
     <div class="modal-footer">
      <div class="btn-group" style="width: 100%">
       <button type="button" class="btn btn-danger" style="width: 50%" data-dismiss="modal">No, take me back</button>
-      <button type="button" class="btn btn-success" style="width: 50%" data-dismiss="modal" onclick="runTask()">Yes, start the Run</button>
+      <button type="button" class="btn btn-success" style="width: 50%" data-dismiss="modal" onclick="runOrScheduleTask()">Yes, start the Run</button>
      </div>
     </div>
    </div>
@@ -229,6 +257,82 @@
      <div class="btn-group" style="width: 100%">
       <button type="button" class="btn btn-danger" style="width: 50%" data-dismiss="modal">No, take me back</button>
       <button type="button" class="btn btn-success" style="width: 50%" data-dismiss="modal" onclick="deleteProfile()">Yes, delete the profile</button>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <div id="settingsModal" class="modal fade" tabindex="-1" aria-hidden="true" style="display: none;">
+  <div class="modal-dialog settings-modal-dialog">
+   <div class="modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+     <h3 class="modal-title">Settings</h3>
+    </div>
+    <div class="modal-body settings-modal-body">
+     <div class="settings-section">
+      <div class="settings-section-title">Alerts &amp; Monitoring</div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">Watcher Enabled</span>
+        <span class="settings-label-sub">Send ntfy alerts when kiln deviates</span>
+       </div>
+       <label class="settings-toggle">
+        <input type="checkbox" id="setting_watcher_enabled">
+        <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
+       </label>
+      </div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">Thermocouple Error Alerts</span>
+        <span class="settings-label-sub">Alert when TC read errors are detected</span>
+       </div>
+       <label class="settings-toggle">
+        <input type="checkbox" id="setting_tc_error_alerts">
+        <span class="settings-toggle-track"><span class="settings-toggle-thumb"></span></span>
+       </label>
+      </div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">Temp Deviation Limit</span>
+        <span class="settings-label-sub">Alert if actual temp deviates by this many degrees</span>
+       </div>
+       <input type="number" id="setting_temp_deviation_limit" class="settings-input" min="1" max="200" step="1">
+      </div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">ntfy Topic</span>
+        <span class="settings-label-sub">Your ntfy.sh subscription topic</span>
+       </div>
+       <input type="text" id="setting_ntfy_topic" class="settings-input settings-input-text">
+      </div>
+      <div class="settings-row settings-row-action">
+       <button type="button" class="btn btn-default btn-sm" onclick="testNotification()">Test Notification</button>
+      </div>
+     </div>
+     <div class="settings-section">
+      <div class="settings-section-title">Cost &amp; Display</div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">Electricity Rate (per kWh)</span>
+        <span class="settings-label-sub">Used to calculate firing cost</span>
+       </div>
+       <input type="number" id="setting_kwh_rate" class="settings-input" min="0" step="0.001">
+      </div>
+      <div class="settings-row">
+       <div class="settings-label">
+        <span class="settings-label-text">Currency Symbol</span>
+        <span class="settings-label-sub">Displayed next to cost (e.g. $, £, €)</span>
+       </div>
+       <input type="text" id="setting_currency_type" class="settings-input settings-input-text settings-input-short">
+      </div>
+     </div>
+    </div>
+    <div class="modal-footer settings-modal-footer">
+     <div class="btn-group" style="width: 100%">
+      <button type="button" class="btn btn-danger" style="width: 50%" data-dismiss="modal">Cancel</button>
+      <button type="button" class="btn btn-success" style="width: 50%" onclick="saveSettings()">Save Settings</button>
      </div>
     </div>
    </div>

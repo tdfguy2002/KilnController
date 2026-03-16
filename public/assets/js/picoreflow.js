@@ -87,7 +87,6 @@ function updateScheduleDisplay(data)
             var dt = data[i][0] - data[i-1][0];
             var dtemp = data[i][1] - data[i-1][1];
             if (dt > 0) {
-                segStr = Math.round(dt / 60) + ' min';
                 var rate = Math.round(dtemp / dt * 3600);
                 if (rate > 0) {
                     rateStr = '+' + rate + '&deg;/hr';
@@ -96,6 +95,7 @@ function updateScheduleDisplay(data)
                     rateStr = rate + '&deg;/hr';
                     rateClass = 'rate-down';
                 } else {
+                    segStr = Math.round(dt / 60) + ' min';
                     rateStr = 'hold';
                     rateClass = 'rate-hold';
                 }
@@ -110,6 +110,78 @@ function updateScheduleDisplay(data)
             '<td class="sched-rate ' + rateClass + '">' + rateStr + '</td>' +
             '</tr>';
         tbody.append(row);
+    }
+}
+
+function toggleDelayedStart() {
+    var checked = $('#delayed_start_toggle').is(':checked');
+    $('#delayed_start_picker').toggle(checked);
+    if (checked) {
+        // default to tomorrow at 5am
+        var d = new Date();
+        d.setDate(d.getDate() + 1);
+        d.setHours(5, 0, 0, 0);
+        var pad = function(n) { return String(n).padStart(2,'0'); };
+        var local = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        $('#delayed_start_time').val(local);
+    }
+}
+
+function toggleAlarmInput() {
+    $('#alarm_input_row').toggle($('#alarm_toggle').is(':checked'));
+}
+
+function runOrScheduleTask() {
+    // send alarm if set
+    if ($('#alarm_toggle').is(':checked')) {
+        var alarmTemp = parseFloat($('#alarm_temp').val()) || 0;
+        if (alarmTemp > 0) {
+            $.ajax({ type: 'POST', url: '/api', data: JSON.stringify({ cmd: 'alarm', temp: alarmTemp }), contentType: 'application/json' });
+        }
+    } else {
+        $.ajax({ type: 'POST', url: '/api', data: JSON.stringify({ cmd: 'alarm', temp: 0 }), contentType: 'application/json' });
+    }
+
+    if ($('#delayed_start_toggle').is(':checked')) {
+        var dt = new Date($('#delayed_start_time').val());
+        if (isNaN(dt.getTime()) || dt <= new Date()) {
+            alert('Please select a future date and time.');
+            return;
+        }
+        $.ajax({
+            type: 'POST', url: '/api',
+            data: JSON.stringify({ cmd: 'schedule', profile: selected_profile_name, start_at: dt.getTime() / 1000 }),
+            contentType: 'application/json'
+        });
+        $('#delayed_start_toggle').prop('checked', false);
+        $('#delayed_start_picker').hide();
+    } else {
+        runTask();
+    }
+    $('#alarm_toggle').prop('checked', false);
+    $('#alarm_input_row').hide();
+}
+
+function cancelSchedule() {
+    $.ajax({
+        type: 'POST', url: '/api',
+        data: JSON.stringify({ cmd: 'cancel_schedule' }),
+        contentType: 'application/json'
+    });
+}
+
+function setAlarm() {
+    var temp = parseFloat($('#alarm_temp').val()) || 0;
+    $.ajax({
+        type: 'POST',
+        url: '/api',
+        data: JSON.stringify({ cmd: 'alarm', temp: temp }),
+        contentType: 'application/json'
+    });
+    if (temp > 0) {
+        $.bootstrapGrowl('Alarm set for ' + temp + '°' + temp_scale_display, { type: 'info', delay: 3000 });
+    } else {
+        $.bootstrapGrowl('Alarm cleared', { type: 'info', delay: 3000 });
     }
 }
 
@@ -591,6 +663,7 @@ $(document).ready(function()
                 {
                     $("#nav_start").hide();
                     $("#nav_stop").show();
+                    $("#nav_cancel_schedule").hide();
 
                     graph.live.data.push([x.runtime, x.temperature]);
                     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ] , getOptions());
@@ -602,14 +675,24 @@ $(document).ready(function()
                     $('#state').html(eta);
                     $('#target_temp').html(parseInt(x.target));
                     $('#cost').html(x.currency_type + parseFloat(x.cost).toFixed(2));
-                  
-
-
+                }
+                else if(state=="SCHEDULED")
+                {
+                    $("#nav_start").hide();
+                    $("#nav_stop").hide();
+                    $("#nav_cancel_schedule").show();
+                    var secondsUntil = Math.max(0, Math.round(x.scheduled_start - Date.now()/1000));
+                    var h = Math.floor(secondsUntil/3600);
+                    var m = Math.floor((secondsUntil%3600)/60);
+                    var s = secondsUntil%60;
+                    var countdown = h + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                    $('#state').html(countdown);
                 }
                 else
                 {
                     $("#nav_start").show();
                     $("#nav_stop").hide();
+                    $("#nav_cancel_schedule").hide();
                     $('#state').html('<p class="ds-text">'+state+'</p>');
                 }
 
@@ -967,4 +1050,77 @@ function sbSave() {
     ws_storage.send(JSON.stringify({ "cmd": "PUT", "profile": profile }));
     $('#scheduleBuilderModal').modal('hide');
     ws_storage.send('GET');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+function testNotification() {
+    $.ajax({
+        type: 'GET',
+        url: '/api/test_notification',
+        success: function(data) {
+            var r = (typeof data === 'string') ? JSON.parse(data) : data;
+            if (r.success) {
+                $.bootstrapGrowl('Test notification sent!', { type: 'success', delay: 3000 });
+            } else {
+                $.bootstrapGrowl('Failed: ' + (r.error || 'unknown'), { type: 'error', delay: 4000 });
+            }
+        },
+        error: function() {
+            $.bootstrapGrowl('Could not reach server', { type: 'error', delay: 3000 });
+        }
+    });
+}
+
+function openSettings() {
+    $.ajax({
+        type: 'GET',
+        url: '/api/settings',
+        success: function(data) {
+            var s = (typeof data === 'string') ? JSON.parse(data) : data;
+            $('#setting_watcher_enabled').prop('checked', s.watcher_enabled !== false);
+            $('#setting_tc_error_alerts').prop('checked', s.tc_error_alerts !== false);
+            $('#setting_temp_deviation_limit').val(s.temp_deviation_limit || 10);
+            $('#setting_ntfy_topic').val(s.ntfy_topic || '');
+            $('#setting_kwh_rate').val(s.kwh_rate || 0.209);
+            $('#setting_currency_type').val(s.currency_type || '$');
+            $('#settingsModal').modal('show');
+        },
+        error: function() {
+            $.bootstrapGrowl('Could not load settings', { type: 'error', delay: 3000 });
+        }
+    });
+}
+
+function saveSettings() {
+    var payload = {
+        watcher_enabled:      $('#setting_watcher_enabled').is(':checked'),
+        tc_error_alerts:      $('#setting_tc_error_alerts').is(':checked'),
+        temp_deviation_limit: parseFloat($('#setting_temp_deviation_limit').val()) || 10,
+        ntfy_topic:           $('#setting_ntfy_topic').val().trim(),
+        kwh_rate:             parseFloat($('#setting_kwh_rate').val()) || 0.209,
+        currency_type:        $('#setting_currency_type').val().trim() || '$'
+    };
+    $.ajax({
+        type: 'POST',
+        url: '/api/settings',
+        data: JSON.stringify(payload),
+        contentType: 'application/json',
+        success: function(data) {
+            var r = (typeof data === 'string') ? JSON.parse(data) : data;
+            if (r.success) {
+                kwh_rate = payload.kwh_rate;
+                currency_type = payload.currency_type;
+                $('#settingsModal').modal('hide');
+                $.bootstrapGrowl('Settings saved', { type: 'success', delay: 2500 });
+            } else {
+                $.bootstrapGrowl('Save failed: ' + (r.error || 'unknown'), { type: 'error', delay: 4000 });
+            }
+        },
+        error: function() {
+            $.bootstrapGrowl('Could not save settings', { type: 'error', delay: 3000 });
+        }
+    });
 }

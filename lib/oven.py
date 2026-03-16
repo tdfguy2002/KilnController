@@ -765,6 +765,8 @@ class Oven(threading.Thread):
             "pidstats": self.pid.pidstats,
             "catching_up": self.catching_up,
             "tc_error_pct": self.board.temp_sensor.status.error_percent() if hasattr(self.board, "temp_sensor") else 0,
+            "alarm_temp": getattr(self, "alarm_temp", 0),
+            "scheduled_start": getattr(self, "scheduled_start", 0),
         }
 
     def save_state(self):
