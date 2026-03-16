@@ -696,6 +696,16 @@ body::before {
     text-align: right;
 }
 
+.sched-seg {
+    font-family: "Digi" !important;
+    font-size: 26px !important;
+    line-height: 1 !important;
+    color: var(--text-dim) !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    width: 110px;
+}
+
 .sched-rate {
     font-family: "Digi" !important;
     font-size: 26px !important;

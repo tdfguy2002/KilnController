@@ -68,7 +68,7 @@ function updateScheduleDisplay(data)
     tbody.empty();
 
     if (!data || data.length === 0) {
-        tbody.append('<tr><td colspan="4" style="text-align:center;">No waypoints</td></tr>');
+        tbody.append('<tr><td colspan="5" style="text-align:center;">No waypoints</td></tr>');
         return;
     }
 
@@ -82,10 +82,12 @@ function updateScheduleDisplay(data)
 
         var rateStr = '&mdash;';
         var rateClass = '';
+        var segStr = '&mdash;';
         if (i > 0) {
             var dt = data[i][0] - data[i-1][0];
             var dtemp = data[i][1] - data[i-1][1];
             if (dt > 0) {
+                segStr = Math.round(dt / 60) + ' min';
                 var rate = Math.round(dtemp / dt * 3600);
                 if (rate > 0) {
                     rateStr = '+' + rate + '&deg;/hr';
@@ -104,6 +106,7 @@ function updateScheduleDisplay(data)
             '<td class="sched-num">' + (i + 1) + '</td>' +
             '<td class="sched-time">' + timeStr + '</td>' +
             '<td class="sched-temp">' + Math.round(temp) + '&deg;</td>' +
+            '<td class="sched-seg">' + segStr + '</td>' +
             '<td class="sched-rate ' + rateClass + '">' + rateStr + '</td>' +
             '</tr>';
         tbody.append(row);
@@ -153,25 +156,14 @@ function updateProgress(percentage)
 
 function updateProfileTable()
 {
-    var dps = 0;
-    var slope = "";
-    var color = "";
-
     var html = '<h3>Schedule Points</h3><div class="table-responsive" style="scroll: none"><table class="table table-striped">';
-        html += '<tr><th style="width: 50px">#</th><th>Target Time in ' + time_scale_long+ '</th><th>Target Temperature in °'+temp_scale_display+'</th><th>Slope in &deg;'+temp_scale_display+'/'+time_scale_slope+'</th><th></th></tr>';
+        html += '<tr><th style="width: 50px">#</th><th>Target Time in ' + time_scale_long+ '</th><th>Target Temperature in °'+temp_scale_display+'</th><th></th></tr>';
 
     for(var i=0; i<graph.profile.data.length;i++)
     {
-
-        if (i>=1) dps =  ((graph.profile.data[i][1]-graph.profile.data[i-1][1])/(graph.profile.data[i][0]-graph.profile.data[i-1][0]) * 10) / 10;
-        if (dps  > 0) { slope = "up";     color="rgba(206, 5, 5, 1)"; } else
-        if (dps  < 0) { slope = "down";   color="rgba(23, 108, 204, 1)"; dps *= -1; } else
-        if (dps == 0) { slope = "right";  color="grey"; }
-
         html += '<tr><td><h4>' + (i+1) + '</h4></td>';
         html += '<td><input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ timeProfileFormatter(graph.profile.data[i][0],true) + '" style="width: 60px" /></td>';
         html += '<td><input type="text" class="form-control" id="profiletable-1-'+i+'" value="'+ graph.profile.data[i][1] + '" style="width: 60px" /></td>';
-        html += '<td><div class="input-group"><span class="glyphicon glyphicon-circle-arrow-' + slope + ' input-group-addon ds-trend" style="background: '+color+'"></span><input type="text" class="form-control ds-input" readonly value="' + formatDPS(dps) + '" style="width: 100px" /></div></td>';
         html += '<td>&nbsp;</td></tr>';
     }
 
