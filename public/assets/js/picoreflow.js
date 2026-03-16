@@ -784,9 +784,51 @@ function openScheduleBuilder() {
     $('#sb-profile-name').val('');
     $('#sb-start-temp').val(sbData.startTemp);
     $('#sb-start-unit').text('°' + temp_scale_display);
-    $('#sb-start-temp').off('change').on('change', function() {
-        sbRenderRows();
-    });
+    $('#sb-start-temp').off('change').on('change', function() { sbRenderRows(); });
+    sbRenderRows();
+    $('#scheduleBuilderModal').modal('show');
+}
+
+function openScheduleBuilderForEdit() {
+    var profile = profiles[selected_profile];
+    if (!profile || !profile.data || profile.data.length < 2) {
+        openScheduleBuilder();
+        return;
+    }
+
+    var labels = profile.segment_labels || [];
+
+    // convert stored °C waypoints to display units
+    function toDisplay(c) {
+        return (temp_scale === 'f') ? Math.round(c * 9/5 + 32) : Math.round(c);
+    }
+
+    var startTemp = toDisplay(profile.data[0][1]);
+    var rows = [];
+
+    for (var i = 1; i < profile.data.length; i++) {
+        var prevSecs = profile.data[i-1][0];
+        var currSecs = profile.data[i][0];
+        var prevTemp = toDisplay(profile.data[i-1][1]);
+        var currTemp = toDisplay(profile.data[i][1]);
+        var dt = currSecs - prevSecs;
+
+        if (currTemp === prevTemp) {
+            // hold — add to the last row's hold
+            if (rows.length > 0) {
+                rows[rows.length - 1].hold = Math.round(dt / 60);
+            }
+        } else {
+            var rate = Math.round(Math.abs(currTemp - prevTemp) / dt * 3600);
+            rows.push({ to: currTemp, rate: rate, hold: 0, mode: 'rate', desc: labels[rows.length] || '' });
+        }
+    }
+
+    sbData = { name: profile.name, startTemp: startTemp, rows: rows };
+    $('#sb-profile-name').val(profile.name);
+    $('#sb-start-temp').val(startTemp);
+    $('#sb-start-unit').text('°' + temp_scale_display);
+    $('#sb-start-temp').off('change').on('change', function() { sbRenderRows(); });
     sbRenderRows();
     $('#scheduleBuilderModal').modal('show');
 }

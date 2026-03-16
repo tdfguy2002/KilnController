@@ -48,6 +48,50 @@ def index():
 def state():
     return bottle.redirect('/picoreflow/state.html')
 
+@app.get('/log')
+def handle_log():
+    log_path = '/var/log/kiln-controller.log'
+    per_page = 200
+    page = int(bottle.request.query.get('page', 1))
+
+    try:
+        with open(log_path, 'r') as f:
+            all_lines = f.readlines()
+        total_lines = len(all_lines)
+        total_pages = max(1, -(-total_lines // per_page))  # ceiling division
+        page = max(1, min(page, total_pages))
+        # page 1 = last per_page lines, page 2 = lines before that, etc.
+        end   = total_lines - (page - 1) * per_page
+        start = max(0, end - per_page)
+        content = ''.join(all_lines[start:end])
+        info = 'Lines %d–%d of %d' % (start + 1, end, total_lines)
+    except Exception as e:
+        content = 'Could not read log file: %s' % str(e)
+        total_pages = 1
+        info = ''
+
+    newer = ('<a href="/log?page=%d">&laquo; Newer</a>' % (page - 1)) if page > 1 else '<span style="opacity:0.3">&laquo; Newer</span>'
+    older = ('<a href="/log?page=%d">Older &raquo;</a>' % (page + 1)) if page < total_pages else '<span style="opacity:0.3">Older &raquo;</span>'
+
+    bottle.response.content_type = 'text/html; charset=utf-8'
+    return '''<!DOCTYPE html>
+<html><head><title>Kiln Log</title>
+<style>
+  body {{ background:#0d1018; color:#c8d8e8; font-family:monospace; font-size:13px; padding:20px; margin:0; }}
+  pre {{ white-space:pre-wrap; word-break:break-all; }}
+  h2 {{ color:#ee6c20; font-family:sans-serif; margin-top:0; }}
+  .nav {{ font-family:sans-serif; font-size:14px; margin-bottom:16px; display:flex; gap:24px; align-items:center; }}
+  a {{ color:#ee6c20; text-decoration:none; }} a:hover {{ text-decoration:underline; }}
+  .info {{ color:#5a6a7a; font-size:12px; }}
+</style></head>
+<body>
+<h2>Kiln Controller Log</h2>
+<div class="nav">{newer} {older} <span class="info">Page {page} of {total_pages} &nbsp;|&nbsp; {info}</span></div>
+<pre>{content}</pre>
+<div class="nav">{newer} {older}</div>
+</body></html>'''.format(newer=newer, older=older, page=page, total_pages=total_pages, info=info, content=content)
+
+
 @app.get('/api/stats')
 def handle_api_stats():
     log.info("/api/stats command received")
