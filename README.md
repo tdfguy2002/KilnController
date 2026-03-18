@@ -54,7 +54,7 @@ Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 
 | Image | Hardware | Description |
 |-------|----------|-------------|
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/rpi.png) | [Raspberry Pi](https://www.adafruit.com/category/105) | Virtually any model works — only a few GPIO pins are used. Raspberry Pi 5 is supported via the `use_spidev_tc` config flag. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/rpi.png) | [Raspberry Pi Zero 2W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) | Tested on a Raspberry Pi Zero 2W. Any Pi with SPI and Wi-Fi should work. Raspberry Pi 5 requires setting `use_spidev_tc = True` in config due to Blinka/lgpio conflicts. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board. MAX31855 supports K-type only; MAX31856 supports K, J, N, R, S, T, E, B. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Use a heavy-duty ceramic thermocouple rated for kilns. S-type is common with MAX31856. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/breadboard.png) | Breadboard | Breadboard, ribbon cable, GPIO connector, and jumper wires. |
@@ -90,7 +90,7 @@ sudo raspi-config
 
 ### Raspberry Pi 5 / Debian Trixie
 
-If you encounter Blinka/lgpio conflicts, set `use_spidev_tc = True` in `config.py` to use the raw Linux SPI path instead.
+This project is tested on a **Raspberry Pi Zero 2W**. If you use a Pi 5 and encounter Blinka/lgpio conflicts, set `use_spidev_tc = True` in `config.py` to use the raw Linux SPI path instead.
 
 
 ## Configuration
