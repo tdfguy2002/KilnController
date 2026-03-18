@@ -5,12 +5,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @font-face {
-    font-family: "Digi";
-    src: url('/picoreflow/assets/fonts/digital-7-webfont.eot');
-    src: local("Digital 7"),
-    url('/picoreflow/assets/fonts/digital-7-webfont.woff') format("woff"),
-    url('/picoreflow/assets/fonts/digital-7-webfont.ttf') format("truetype");
+    font-family: 'Oxanium';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/picoreflow/assets/fonts/oxanium-400.ttf?v=1') format('truetype');
 }
+
+@font-face {
+    font-family: 'Oxanium';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/picoreflow/assets/fonts/oxanium-600.ttf?v=1') format('truetype');
+}
+
+@font-face {
+    font-family: 'Oxanium';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/picoreflow/assets/fonts/oxanium-700.ttf?v=1') format('truetype');
+}
+
 
 @font-face {
     font-family: "Tables";
@@ -203,7 +220,8 @@ body::before {
 
 .ds-num {
     width: 110px;
-    font-family: "Digi";
+    font-family: 'Oxanium';
+    font-weight: 600;
     border-right: 1px solid var(--border);
     white-space: nowrap;
     text-shadow: 0 0 22px rgba(210, 200, 180, 0.35);
@@ -233,8 +251,9 @@ body::before {
 .ds-text {
     border: none;
     width: auto;
-    font-family: "Digi";
+    font-family: 'Oxanium';
     font-size: 38px;
+    font-weight: 600;
     color: var(--amber);
     text-shadow: 0 0 22px var(--amber-glow), 0 0 50px rgba(238,108,32,0.06);
     padding-left: 14px;
@@ -431,7 +450,7 @@ body::before {
     background: var(--bg-elevated) !important;
     border-color: var(--border) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-ui) !important;
+    font-family: 'Oxanium' !important;
     font-size: 14px !important;
     height: 38px !important;
     color-scheme: dark;
@@ -469,7 +488,7 @@ body::before {
     background: var(--bg-elevated) !important;
     border-color: var(--border) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-ui) !important;
+    font-family: 'Oxanium' !important;
     font-size: 13px !important;
     height: 34px !important;
 }
@@ -505,8 +524,8 @@ body::before {
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text-primary);
-    font-family: var(--font-ui);
-    font-size: 14px;
+    font-family: 'Oxanium';
+    font-size: 16px;
     font-weight: 600;
     line-height: 32px;
     height: 34px;
@@ -548,8 +567,8 @@ body::before {
 }
 
 .select2-drop {
-    font-family: var(--font-ui) !important;
-    font-size: 14px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 16px !important;
     background: #111827 !important;
     border: 1px solid rgba(238,108,32,0.4) !important;
     border-top: none !important;
@@ -557,11 +576,11 @@ body::before {
     color: var(--text-primary) !important;
 }
 .select2-results {
-    font-family: var(--font-ui) !important;
+    font-family: 'Oxanium' !important;
 }
 .select2-result-label {
-    font-family: var(--font-ui) !important;
-    font-size: 14px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 16px !important;
     color: var(--text-dim) !important;
     padding: 8px 12px !important;
 }
@@ -832,9 +851,14 @@ body::before {
     text-transform: uppercase;
     color: var(--text-label);
     background: rgba(0,0,0,0.25);
-    border-bottom: 1px solid var(--border) !important;
+    border-bottom: 1px solid rgba(238,108,32,0.2) !important;
     border-top: none !important;
+    border-right: 1px solid var(--border) !important;
     padding: 7px 14px;
+}
+
+.schedule-table thead tr th:last-child {
+    border-right: none !important;
 }
 
 .schedule-table tbody tr td {
@@ -843,9 +867,14 @@ body::before {
     font-weight: 500;
     color: var(--text-dim);
     border-top: 1px solid var(--border) !important;
+    border-right: 1px solid var(--border) !important;
     padding: 7px 14px;
     background: transparent;
     vertical-align: middle;
+}
+
+.schedule-table tbody tr td:last-child {
+    border-right: none !important;
 }
 
 .schedule-table tbody tr:first-child td {
@@ -863,8 +892,8 @@ body::before {
 }
 
 .sched-time {
-    font-family: "Digi" !important;
-    font-size: 26px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 24px !important;
     line-height: 1 !important;
     color: var(--text-primary) !important;
     letter-spacing: 0.05em;
@@ -874,8 +903,8 @@ body::before {
 }
 
 .sched-temp {
-    font-family: "Digi" !important;
-    font-size: 26px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 24px !important;
     line-height: 1 !important;
     color: var(--amber) !important;
     padding-top: 12px !important;
@@ -885,8 +914,8 @@ body::before {
 }
 
 .sched-seg {
-    font-family: "Digi" !important;
-    font-size: 26px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 24px !important;
     line-height: 1 !important;
     color: var(--text-dim) !important;
     padding-top: 12px !important;
@@ -895,8 +924,8 @@ body::before {
 }
 
 .sched-rate {
-    font-family: "Digi" !important;
-    font-size: 26px !important;
+    font-family: 'Oxanium' !important;
+    font-size: 24px !important;
     line-height: 1 !important;
     color: var(--amber) !important;
     padding-top: 12px !important;
@@ -1088,7 +1117,7 @@ body::before {
     height: 44px !important;
     padding: 8px 12px !important;
     font-size: 16px !important;
-    font-family: var(--font-ui) !important;
+    font-family: 'Oxanium' !important;
     width: 100% !important;
     box-sizing: border-box;
     -webkit-appearance: none;
@@ -1199,6 +1228,39 @@ body::before {
     border-radius: 0 0 6px 6px;
 }
 
+.runs-table {
+    margin: 0;
+    color: var(--text-primary);
+}
+.runs-table thead th {
+    color: var(--text-dim);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 8px 12px;
+}
+.runs-table tbody td {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+.runs-filename {
+    font-family: var(--font-ui);
+    font-size: 13px;
+}
+.runs-dl {
+    text-align: right;
+    white-space: nowrap;
+}
+.runs-empty {
+    color: var(--text-dim);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    padding: 16px 0;
+    margin: 0;
+}
+
 .settings-section {
     padding: 0 24px 8px;
 }
@@ -1262,7 +1324,7 @@ body::before {
     background: var(--bg-input) !important;
     border: 1px solid rgba(255,255,255,0.14) !important;
     color: var(--text-primary) !important;
-    font-family: var(--font-ui) !important;
+    font-family: 'Oxanium' !important;
     font-size: 15px !important;
     font-weight: 600 !important;
     height: 38px !important;

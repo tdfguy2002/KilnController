@@ -881,19 +881,15 @@ function openScheduleBuilderForEdit() {
 
     var labels = profile.segment_labels || [];
 
-    // convert stored °C waypoints to display units
-    function toDisplay(c) {
-        return (temp_scale === 'f') ? Math.round(c * 9/5 + 32) : Math.round(c);
-    }
-
-    var startTemp = toDisplay(profile.data[0][1]);
+    // profile.data is already in display units (server normalizes before sending)
+    var startTemp = Math.round(profile.data[0][1]);
     var rows = [];
 
     for (var i = 1; i < profile.data.length; i++) {
         var prevSecs = profile.data[i-1][0];
         var currSecs = profile.data[i][0];
-        var prevTemp = toDisplay(profile.data[i-1][1]);
-        var currTemp = toDisplay(profile.data[i][1]);
+        var prevTemp = Math.round(profile.data[i-1][1]);
+        var currTemp = Math.round(profile.data[i][1]);
         var dt = currSecs - prevSecs;
 
         if (currTemp === prevTemp) {
@@ -1070,6 +1066,34 @@ function testNotification() {
         },
         error: function() {
             $.bootstrapGrowl('Could not reach server', { type: 'error', delay: 3000 });
+        }
+    });
+}
+
+function openRuns() {
+    $('#runs-modal-body').html('<p class="runs-empty">Loading&hellip;</p>');
+    $('#runsModal').modal('show');
+    $.ajax({
+        type: 'GET',
+        url: '/api/runs',
+        success: function(data) {
+            var files = (typeof data === 'string') ? JSON.parse(data) : data;
+            if (!files.length) {
+                $('#runs-modal-body').html('<p class="runs-empty">No run logs yet. Logs are created automatically when a schedule runs.</p>');
+                return;
+            }
+            var rows = files.map(function(f) {
+                var label = f.replace('.csv', '').replace(/_/g, ' ');
+                return '<tr><td class="runs-filename">' + label + '</td>' +
+                       '<td class="runs-dl"><a href="/api/runs/' + encodeURIComponent(f) + '" download="' + f + '" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-download-alt"></span> Download</a></td></tr>';
+            });
+            $('#runs-modal-body').html(
+                '<table class="table runs-table"><thead><tr><th>Run</th><th></th></tr></thead><tbody>' +
+                rows.join('') + '</tbody></table>'
+            );
+        },
+        error: function() {
+            $('#runs-modal-body').html('<p class="runs-empty">Could not load run logs.</p>');
         }
     });
 }

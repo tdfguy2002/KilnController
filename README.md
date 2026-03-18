@@ -1,172 +1,228 @@
-Kiln Controller
-==========
+# Kiln Controller
 
 Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 
 ## Features
 
-  * supports [many boards](https://github.com/jbruce12000/kiln-controller/blob/main/docs/supported-boards.md) into addition to raspberry pi
-  * supports Adafruit MAX31856 and MAX31855 thermocouple boards
-  * support for K, J, N, R, S, T, E, or B type thermocouples
-  * easy to create new kiln schedules and edit / modify existing schedules
-  * no limit to runtime - fire for days if you want
-  * view status from multiple devices at once - computer, tablet etc
-  * real-time firing cost estimate
-  * real-time heating rate displayed in degrees per hour
-  * supports PID parameters you tune to your kiln
-  * monitors temperature in kiln after schedule has ended
-  * api for starting and stopping at any point in a schedule
-  * accurate simulation
-  * support for shifting schedule when kiln cannot heat quickly enough
-  * support for skipping first part of profile to match current kiln temperature
-  * prevents integral wind-up when temperatures not near the set point
-  * automatic restarts if there is a power outage or other event
-  * support for a watcher to page you via slack if you kiln is out of whack
-  * easy scheduling of future kiln runs
+- Supports Adafruit MAX31856 and MAX31855 thermocouple breakout boards
+- Supports K, J, N, R, S, T, E, and B type thermocouples
+- Dark industrial web UI — works from any browser on your network (phone, tablet, computer)
+- Real-time sensor temperature, target temperature, heating rate, and cost display
+- Live firing progress bar and status indicators (heating, cooling, air, hazard, door)
+- **Schedule Builder** — create and edit firing schedules segment by segment, with rate or duration input per segment, hold times, and segment descriptions
+- **Schedule Waypoints table** — view all waypoints with cumulative time, temperature, hold duration, and computed rate
+- **Delayed Start** — schedule a firing to begin at a specific future date and time
+- **Temperature Alarm** — get alerted when the kiln reaches a target temperature mid-run
+- **Settings panel** — configure electricity rate, currency, watcher, ntfy topic, and TC error alerts from the UI without editing config files
+- **Run log viewer** — browse and download CSV logs of past firings directly from the UI
+- Real-time firing cost estimate (configurable kWh rate and currency symbol)
+- Real-time heating rate in degrees per hour
+- PID control with configurable Kp, Ki, Kd parameters
+- Automatic schedule advancement — shifts schedule forward or back when kiln is outside the PID control window
+- Prevents PID integral windup when temperature is far from setpoint
+- Continues monitoring temperature after schedule completes
+- Automatic restart after power outage
+- **Watcher** — background process that sends push notifications via [ntfy.sh](https://ntfy.sh) when the kiln deviates from schedule, encounters thermocouple errors, or hits a user-defined temperature alarm
+- REST + WebSocket API for programmatic control
+- Accurate kiln simulation mode for testing without hardware
+- Raspberry Pi 5 / Debian Trixie compatible via direct spidev path (no Blinka/lgpio conflicts)
+- Remote CSV logger via WebSocket
 
 
-**Run Kiln Schedule**
+## Screenshots
+
+**Main Dashboard**
 
 ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/kiln-running.png)
 
-**Edit Kiln Schedule**
+**Schedule Builder**
 
 ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/kiln-schedule.png)
+
 
 ## Hardware
 
 ### Parts
 
 | Image | Hardware | Description |
-| ------| -------- | ----------- |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/rpi.png) | [Raspberry Pi](https://www.adafruit.com/category/105) | Virtually any Raspberry Pi will work since only a few GPIO pins are being used. Any board supported by [blinka](https://circuitpython.org/blinka) and has SPI should work. You'll also want to make sure the board has wifi. If you use something other than a Raspberry PI and get it to work, let me know. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Invest in a heavy duty, ceramic thermocouple designed for kilns. Make sure the type will work with your thermocouple board. Adafruit-MAX31855 works only with K-type. Adafruit-MAX31856 is flexible and works with many types, but folks usually pick S-type. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/breadboard.png) | Breadboard | breadboard, ribbon cable, connector for pi's gpio pins & connecting wires |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ssr.png) | Solid State Relay | Zero crossing, make sure it can handle the max current of your kiln. Even if the kiln is 220V you can buy a single [3 Phase SSR](https://www.auberins.com/index.php?main_page=product_info&cPath=2_30&products_id=331). It's like having 3 SSRs in one.  Relays this big always require a heat sink. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ks-1018.png) | Electric Kiln | There are many old electric kilns on the market that don't have digital controls. You can pick one up on the used market cheaply.  This controller will work with 110V or 220V (pick a proper SSR). My kiln is a Skutt KS-1018. |
+|-------|----------|-------------|
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/rpi.png) | [Raspberry Pi](https://www.adafruit.com/category/105) | Virtually any model works — only a few GPIO pins are used. Raspberry Pi 5 is supported via the `use_spidev_tc` config flag. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board. MAX31855 supports K-type only; MAX31856 supports K, J, N, R, S, T, E, B. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Use a heavy-duty ceramic thermocouple rated for kilns. S-type is common with MAX31856. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/breadboard.png) | Breadboard | Breadboard, ribbon cable, GPIO connector, and jumper wires. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ssr.png) | Solid State Relay | Zero-crossing SSR rated for your kiln's current. A single [3-phase SSR](https://www.auberins.com/index.php?main_page=product_info&cPath=2_30&products_id=331) works for 220V kilns. Always use a heat sink. |
+| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ks-1018.png) | Electric Kiln | Any electric kiln without digital controls. Works with 110V or 220V (choose appropriate SSR). |
 
 ### Schematic
 
-The pi has three gpio pins connected to the MAX31855 chip. D0 is configured as an input and CS and CLK are outputs. The signal that controls the solid state relay starts as a gpio output which drives a transistor acting as a switch in front of it. This transistor provides 5V and plenty of current to control the ssr. Since only four gpio pins are in use, any pi can be used for this project. See the [config](https://github.com/jbruce12000/kiln-controller/blob/main/config.py) file for gpio pin configuration.
+Three GPIO pins connect the Pi to the thermocouple board (data, chip select, clock). A transistor driven by a fourth GPIO pin switches 5V to the SSR. See `config.py` for pin assignments.
 
-My controller plugs into the wall, and the kiln plugs into the controller. 
-
-**WARNING** This project involves high voltages and high currents. Please make sure that anything you build conforms to local electrical codes and aligns with industry best practices.
-
-**Note:** The GPIO configuration in this schematic does not match the defaults, check [config](https://github.com/jbruce12000/kiln-controller/blob/main/config.py) and make sure the gpio pin configuration aligns with your actual connections.
+**WARNING** — This project involves high voltages and currents. Ensure your build meets local electrical codes.
 
 ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/schematic.png)
 
-*Note: I tried to power my ssr directly using a gpio pin, but it did not work. My ssr required 25ma to switch and rpi's gpio could only provide 16ma. YMMV.*
 
-## Software 
+## Installation
 
-### Raspberry PI OS
+```bash
+sudo apt-get update && sudo apt-get dist-upgrade
+git clone https://github.com/jbruce12000/kiln-controller
+cd kiln-controller
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-Download [Raspberry PI OS](https://www.raspberrypi.org/software/). Use Rasberry PI Imaging tool to install the OS on an SD card. Boot the OS, open a terminal and...
+### Enable SPI (hardware deployment)
 
-    $ sudo apt-get update
-    $ sudo apt-get dist-upgrade
-    $ git clone https://github.com/jbruce12000/kiln-controller
-    $ cd kiln-controller
-    $ python3 -m venv venv
-    $ source venv/bin/activate
-    $ pip install -r requirements.txt
+```bash
+sudo raspi-config
+# Interfacing Options → SPI → Yes → Reboot
+```
 
-*Note: The above steps work on ubuntu if you prefer*
+### Raspberry Pi 5 / Debian Trixie
 
-### Raspberry PI deployment
+If you encounter Blinka/lgpio conflicts, set `use_spidev_tc = True` in `config.py` to use the raw Linux SPI path instead.
 
-If you're done playing around with simulations and want to deploy the code on a Raspberry PI to control a kiln, you'll need to do this in addition to the stuff listed above:
-
-    $ sudo raspi-config
-    interfacing options -> SPI -> Select Yes to enable
-    select reboot
 
 ## Configuration
 
-All parameters are defined in config.py. You need to read through config.py carefully to understand each setting. Here are some of the most important settings:
+All hardware and runtime settings are in `config.py`. Key options:
 
 | Variable | Default | Description |
-| -------- | ------- | ----------- |
-| sensor_time_wait | 2 seconds | It's the duty cycle for the entire system.  It's set to two seconds by default which means that a decision is made every 2s about whether to turn on relay[s] and for how long. If you use mechanical relays, you may want to increase this. At 2s, my SSR switches 11,000 times in 13 hours. |
-| temp_scale | f | f for farenheit, c for celcius |
-| pid parameters | | Used to tune your kiln. See PID Tuning. |
-| simulate | True | Simulate a kiln. Used to test the software by new users so they can check out the features. |
- 
+|----------|---------|-------------|
+| `simulate` | `True` | Use simulated oven for testing — set to `False` for real hardware |
+| `temp_scale` | `f` | Temperature units: `f` for Fahrenheit, `c` for Celsius (must be lowercase) |
+| `use_spidev_tc` | `False` | Use raw spidev SPI instead of Blinka — required on Pi 5 |
+| `max31855` / `max31856` | | Select your thermocouple chip |
+| `pid_kp`, `pid_ki`, `pid_kd` | | PID gains — use `kiln-tuner.py` to calculate |
+| `sensor_time_wait` | `2` | Duty cycle in seconds — increase for mechanical relays |
+| `kiln_must_catch_up` | `True` | Shift schedule when kiln is outside the PID control window |
 
-## Testing
+Runtime settings (kWh rate, currency, ntfy topic, watcher settings) can also be adjusted from the **Settings** panel in the UI.
 
-After you've completed connecting all the hardware together, there are scripts to test the thermocouple and to test the output to the solid state relay. Read the scripts below and then start your testing. First, activate the virtual environment like so...
-
-     $ source venv/bin/activate
-
-then test the thermocouple with:
-
-     $ ./test-thermocouple.py
-
-then test the output with:
-
-     $ ./test-output.py
-
-and you can use this script to examine each pin's state including input/output/voltage on your board:
-
-     $ ./gpioreadall.py
-
-## PID Tuning
-
-Run the [autotuner](https://github.com/jbruce12000/kiln-controller/blob/main/docs/ziegler_tuning.md). It will heat your kiln to 400F, pass that, and then once it cools back down to 400F, it will calculate PID values which you must copy into config.py. No tuning is perfect across a wide temperature range. Here is a [PID Tuning Guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/pid_tuning.md) if you end up having to manually tune.
-
-There is a state view that can help with tuning. It shows the P,I, and D parameters over time plus allows for a csv dump of data collected. It also shows lots of other details that might help with troubleshooting issues. Go to /state.
 
 ## Usage
 
-### Server Startup
+### Start the server
 
-    $ source venv/bin/activate; ./kiln-controller.py
+```bash
+source venv/bin/activate
+./kiln-controller.py
+```
 
-### Autostart Server onBoot
-If you want the server to autostart on boot, run the following command:
+Open `http://<pi-ip>:8081` in any browser on your network.
 
-    $ /home/pi/kiln-controller/start-on-boot
+### Autostart on boot
 
-### Client Access
-
-Click http://127.0.0.1:8081 for local development or the IP
-of your PI and the port defined in config.py (default 8081).
+```bash
+/home/pi/kiln-controller/start-on-boot
+```
 
 ### Simulation
 
-In config.py, set **simulate=True**. Start the server and select a profile and click Start. Simulations run at near real time.
+Set `simulate = True` in `config.py`, start the server, select a profile, and click **Start**. The simulator models your kiln's thermal mass in near real time.
 
-### Scheduling a Kiln run
+### Creating and editing schedules
 
-If you want to schedule a kiln run to start in the future. Here are [examples](https://github.com/jbruce12000/kiln-controller/blob/main/docs/scheduling.md).
+Click the **list icon** (⊞) next to the profile selector to open the **Schedule Builder**. Add segments by specifying:
+- **Target** temperature
+- **Rate** (°/hr) — or click the computed duration to switch to entering duration directly
+- **Hold** time (minutes) at that temperature
+- Optional **description** for each segment
 
-### Watcher
+To edit an existing schedule, select it in the dropdown and click the **edit icon** (✎). The builder reconstructs all segments from the stored waypoints.
 
-If you're busy and do not want to sit around watching the web interface for problems, there is a watcher.py script which you can run on any machine in your local network or even on the raspberry pi which will watch the kiln-controller process to make sure it is running a schedule, and staying within a pre-defined temperature range. When things go bad, it sends messages to a slack channel you define. I have alerts set on my android phone for that specific slack channel. Here are detailed [instructions](https://github.com/jbruce12000/kiln-controller/blob/main/docs/watcher.md).
+### Starting a run
+
+Select a profile and click **Start**. Before firing begins you can optionally:
+- **Delayed Start** — pick a future date/time for the firing to begin automatically
+- **Temperature Alarm** — set a temperature at which you want a push notification
+
+### Delayed start
+
+Check **Delayed Start** in the start dialog and pick a date/time. The schedule will begin automatically at that time. A **Cancel Schedule** button appears on the main dashboard to abort the pending start.
+
+### Watcher & push notifications
+
+The watcher monitors a running kiln and sends push notifications via [ntfy.sh](https://ntfy.sh) when:
+- The kiln temperature deviates from the schedule by more than a configurable limit
+- A thermocouple read error is detected
+- A temperature alarm threshold is reached
+
+Configure your ntfy topic, deviation limit, and toggle options in the **Settings** panel (⚙ in the nav bar). To run the watcher standalone:
+
+```bash
+source venv/bin/activate
+./watcher.py
+```
+
+### Run logs
+
+Click **Runs** in the nav bar to browse past firing logs. Each completed run is saved as a CSV file that can be downloaded for analysis.
+
+### Remote logger
+
+Log a live or completed run to CSV from any machine on the network:
+
+```bash
+./kiln-logger.py --hostname <pi-ip>:8081 --csvfile /tmp/kilnstats.csv --pidstats --stdout
+```
+
+
+## Diagnostics & Tuning
+
+```bash
+./test-thermocouple.py   # verify thermocouple reads
+./test-output.py         # verify SSR GPIO output
+./gpioreadall.py         # inspect all GPIO pin states
+```
+
+### PID autotuner
+
+```bash
+./kiln-tuner.py -t 400   # heat to 400°F and calculate Kp/Ki/Kd
+./kiln-tuner.py -c       # calculate from existing tuning.csv
+```
+
+Copy the resulting values into `config.py`. See the [PID Tuning Guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/pid_tuning.md) for manual tuning. A live PID stats view is available at `/state`.
+
+### Tests
+
+```bash
+pytest Test/                   # run all tests
+pytest Test/test_Profile.py    # run a specific test file
+```
+
+
+## API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/control` | WebSocket | Send `RUN` / `STOP` / `SIMULATE` commands |
+| `/storage` | WebSocket | `GET` / `PUT` / `DELETE` profiles |
+| `/status` | WebSocket | Subscribe to real-time oven state updates |
+| `/config` | WebSocket | Read display config (temp scale, kWh rate) |
+| `/api` | POST | `{"cmd": "run"|"pause"|"resume"|"stop"|"stats"}` |
+| `/api/stats` | GET | Current PID stats |
+| `/api/runs` | GET | List of saved run log files |
+| `/log` | GET | Live log viewer |
+
 
 ## License
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-## Support & Contact
 
-Please use the issue tracker for project related issues.
-If you're having trouble with hardware, I did too.  Here is a [troubleshooting guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/troubleshooting.md) I created for testing RPi gpio pins.
+## Support
+
+Please use the [issue tracker](https://github.com/jbruce12000/kiln-controller/issues) for project-related issues. For hardware troubleshooting, see the [troubleshooting guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/troubleshooting.md).
+
 
 ## Origin
-This project was originally forked from https://github.com/apollo-ng/picoReflow but has diverged a large amount.
+
+Originally forked from [apollo-ng/picoReflow](https://github.com/apollo-ng/picoReflow) — substantially rewritten and extended.

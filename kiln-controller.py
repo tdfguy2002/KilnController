@@ -26,6 +26,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, script_dir + '/lib/')
 profile_path = config.kiln_profiles_directory
 settings_path = os.path.join(script_dir, 'settings.json')
+runs_path = os.path.join(script_dir, 'runs')
 
 SETTINGS_DEFAULTS = {
     "watcher_enabled": True,
@@ -150,6 +151,21 @@ def handle_post_settings():
     except Exception as e:
         bottle.response.status = 500
         return json.dumps({"success": False, "error": str(e)})
+
+@app.get('/api/runs')
+def handle_list_runs():
+    bottle.response.content_type = 'application/json'
+    try:
+        files = sorted([f for f in os.listdir(runs_path) if f.endswith('.csv')], reverse=True)
+    except Exception:
+        files = []
+    return json.dumps(files)
+
+@app.get('/api/runs/<filename>')
+def handle_download_run(filename):
+    if '..' in filename or '/' in filename:
+        bottle.abort(400, 'Invalid filename')
+    return bottle.static_file(filename, root=runs_path, download=filename)
 
 @app.get('/api/stats')
 def handle_api_stats():
