@@ -33,11 +33,19 @@ Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 
 **Main Dashboard**
 
-![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/kiln-running.png)
+![Main Page](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Main%20Page.png)
 
 **Schedule Builder**
 
-![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/kiln-schedule.png)
+![Schedule Builder](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Edit%20Menu.png)
+
+**Settings**
+
+![Settings](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Settings.png)
+
+**Log Viewer**
+
+![Log](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Kiln%20Controller%20Log.png)
 
 
 ## Hardware
