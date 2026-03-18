@@ -55,11 +55,11 @@ Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 | Image | Hardware | Description |
 |-------|----------|-------------|
 | ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Raspberry%20Pi%20Zero%202W.png) | [Raspberry Pi Zero 2W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) | Tested on a Raspberry Pi Zero 2W. Any Pi with SPI and Wi-Fi should work. Other Pi models may require setting `use_spidev_tc = True` in config if Blinka/lgpio conflicts arise. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board. MAX31855 supports K-type only; MAX31856 supports K, J, N, R, S, T, E, B. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Use a heavy-duty ceramic thermocouple rated for kilns. S-type is common with MAX31856. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/breadboard.png) | Breadboard | Breadboard, ribbon cable, GPIO connector, and jumper wires. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ssr.png) | Solid State Relay | Zero-crossing SSR rated for your kiln's current. A single [3-phase SSR](https://www.auberins.com/index.php?main_page=product_info&cPath=2_30&products_id=331) works for 220V kilns. Always use a heat sink. |
-| ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/ks-1018.png) | Electric Kiln | Any electric kiln without digital controls. Works with 110V or 220V (choose appropriate SSR). |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board. MAX31855 supports K-type only; MAX31856 supports K, J, N, R, S, T, E, B. |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Use a heavy-duty ceramic thermocouple rated for kilns. S-type is common with MAX31856. |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/breadboard.png) | Breadboard | Breadboard, ribbon cable, GPIO connector, and jumper wires. |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/ssr.png) | Solid State Relay | Zero-crossing SSR rated for your kiln's current. A single [3-phase SSR](https://www.auberins.com/index.php?main_page=product_info&cPath=2_30&products_id=331) works for 220V kilns. Always use a heat sink. |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/ks-1018.png) | Electric Kiln | Any electric kiln without digital controls. Works with 110V or 220V (choose appropriate SSR). |
 
 ### Schematic
 
@@ -67,15 +67,15 @@ Three GPIO pins connect the Pi to the thermocouple board (data, chip select, clo
 
 **WARNING** — This project involves high voltages and currents. Ensure your build meets local electrical codes.
 
-![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/schematic.png)
+![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/schematic.png)
 
 
 ## Installation
 
 ```bash
 sudo apt-get update && sudo apt-get dist-upgrade
-git clone https://github.com/jbruce12000/kiln-controller
-cd kiln-controller
+git clone https://github.com/tdfguy2002/KilnController
+cd KilnController
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -193,7 +193,7 @@ Log a live or completed run to CSV from any machine on the network:
 ./kiln-tuner.py -c       # calculate from existing tuning.csv
 ```
 
-Copy the resulting values into `config.py`. See the [PID Tuning Guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/pid_tuning.md) for manual tuning. A live PID stats view is available at `/state`.
+Copy the resulting values into `config.py`. See the [PID Tuning Guide](https://github.com/tdfguy2002/KilnController/blob/main/docs/pid_tuning.md) for manual tuning. A live PID stats view is available at `/state`.
 
 ### Tests
 
@@ -228,7 +228,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 ## Support
 
-Please use the [issue tracker](https://github.com/jbruce12000/kiln-controller/issues) for project-related issues. For hardware troubleshooting, see the [troubleshooting guide](https://github.com/jbruce12000/kiln-controller/blob/main/docs/troubleshooting.md).
+Please use the [issue tracker](https://github.com/tdfguy2002/KilnController/issues) for project-related issues. For hardware troubleshooting, see the [troubleshooting guide](https://github.com/tdfguy2002/KilnController/blob/main/docs/troubleshooting.md).
 
 
 ## Origin
