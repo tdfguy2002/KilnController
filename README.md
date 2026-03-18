@@ -25,7 +25,7 @@ Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 - **Watcher** — background process that sends push notifications via [ntfy.sh](https://ntfy.sh) when the kiln deviates from schedule, encounters thermocouple errors, or hits a user-defined temperature alarm
 - REST + WebSocket API for programmatic control
 - Accurate kiln simulation mode for testing without hardware
-- Raspberry Pi 5 / Debian Trixie compatible via direct spidev path (no Blinka/lgpio conflicts)
+- Tested on Raspberry Pi Zero 2W; compatible with other Pi models via direct spidev path (no Blinka/lgpio conflicts)
 - Remote CSV logger via WebSocket
 
 
@@ -54,7 +54,7 @@ Turns a Raspberry Pi into an inexpensive, web-enabled kiln controller.
 
 | Image | Hardware | Description |
 |-------|----------|-------------|
-| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Raspberry%20Pi%20Zero%202W.png) | [Raspberry Pi Zero 2W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) | Tested on a Raspberry Pi Zero 2W. Any Pi with SPI and Wi-Fi should work. Raspberry Pi 5 requires setting `use_spidev_tc = True` in config due to Blinka/lgpio conflicts. |
+| ![Image](https://github.com/tdfguy2002/KilnController/blob/main/public/assets/images/Raspberry%20Pi%20Zero%202W.png) | [Raspberry Pi Zero 2W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/) | Tested on a Raspberry Pi Zero 2W. Any Pi with SPI and Wi-Fi should work. Other Pi models may require setting `use_spidev_tc = True` in config if Blinka/lgpio conflicts arise. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/max31855.png) | [Adafruit MAX31855](https://www.adafruit.com/product/269) or [Adafruit MAX31856](https://www.adafruit.com/product/3263) | Thermocouple breakout board. MAX31855 supports K-type only; MAX31856 supports K, J, N, R, S, T, E, B. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/k-type-thermocouple.png) | [Thermocouple](https://www.auberins.com/index.php?main_page=product_info&cPath=20_3&products_id=39) | Use a heavy-duty ceramic thermocouple rated for kilns. S-type is common with MAX31856. |
 | ![Image](https://github.com/jbruce12000/kiln-controller/blob/main/public/assets/images/breadboard.png) | Breadboard | Breadboard, ribbon cable, GPIO connector, and jumper wires. |
@@ -88,9 +88,9 @@ sudo raspi-config
 # Interfacing Options → SPI → Yes → Reboot
 ```
 
-### Raspberry Pi 5 / Debian Trixie
+### SPI compatibility
 
-This project is tested on a **Raspberry Pi Zero 2W**. If you use a Pi 5 and encounter Blinka/lgpio conflicts, set `use_spidev_tc = True` in `config.py` to use the raw Linux SPI path instead.
+This project is tested on a **Raspberry Pi Zero 2W**. If you encounter Blinka/lgpio conflicts on other Pi models, set `use_spidev_tc = True` in `config.py` to use the raw Linux SPI path instead.
 
 
 ## Configuration
@@ -101,7 +101,7 @@ All hardware and runtime settings are in `config.py`. Key options:
 |----------|---------|-------------|
 | `simulate` | `True` | Use simulated oven for testing — set to `False` for real hardware |
 | `temp_scale` | `f` | Temperature units: `f` for Fahrenheit, `c` for Celsius (must be lowercase) |
-| `use_spidev_tc` | `False` | Use raw spidev SPI instead of Blinka — required on Pi 5 |
+| `use_spidev_tc` | `False` | Use raw spidev SPI instead of Blinka — set to `True` if you encounter lgpio conflicts |
 | `max31855` / `max31856` | | Select your thermocouple chip |
 | `pid_kp`, `pid_ki`, `pid_kd` | | PID gains — use `kiln-tuner.py` to calculate |
 | `sensor_time_wait` | `2` | Duty cycle in seconds — increase for mechanical relays |
