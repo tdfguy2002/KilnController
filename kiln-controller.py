@@ -176,6 +176,17 @@ def handle_api_stats():
     return json.dumps(state)
 
 
+def delayed_run(oven, start_at, profile, watcher):
+    delay = start_at - time.time()
+    if delay > 0:
+        gevent.sleep(delay)
+    if oven.state != 'SCHEDULED':
+        return
+    oven.scheduled_start = 0
+    oven.run_profile(profile)
+    watcher.record(profile)
+
+
 @app.post('/api')
 def handle_api():
     log.info("/api is alive")
@@ -231,16 +242,7 @@ def handle_api():
         oven.state = 'SCHEDULED'
         profile_json = json.dumps(profile)
         scheduled_profile = Profile(profile_json)
-        def delayed_run():
-            delay = start_at - time.time()
-            if delay > 0:
-                gevent.sleep(delay)
-            if oven.state != 'SCHEDULED':
-                return
-            oven.scheduled_start = 0
-            oven.run_profile(scheduled_profile)
-            ovenWatcher.record(scheduled_profile)
-        gevent.spawn(delayed_run)
+        gevent.spawn(delayed_run, oven, start_at, scheduled_profile, ovenWatcher)
 
     if bottle.request.json['cmd'] == 'cancel_schedule':
         log.info("api cancel_schedule command received")
