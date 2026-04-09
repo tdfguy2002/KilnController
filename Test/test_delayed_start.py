@@ -1,7 +1,7 @@
-import sys
 import os
 import time as real_time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+import pytest
 
 # kiln-controller.py is not importable by name (hyphen), so load it via importlib.
 import importlib.util
@@ -52,6 +52,18 @@ _mod.time = _mock_time
 
 
 # ---------------------------------------------------------------------------
+# Fixture: reset shared mocks before every test
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def reset_mocks():
+    _mod_gevent.sleep.reset_mock()
+    _mock_time.time.reset_mock()
+    _mock_time.time.return_value = 1000.0
+    yield
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -72,9 +84,6 @@ def make_profile():
 
 def test_schedule_calls_run_profile():
     """delayed_run calls oven.run_profile with the profile when state is SCHEDULED."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     oven = make_oven('SCHEDULED')
     profile = make_profile()
     watcher = MagicMock()
@@ -87,9 +96,6 @@ def test_schedule_calls_run_profile():
 
 def test_schedule_clears_scheduled_start():
     """delayed_run sets oven.scheduled_start = 0 before calling run_profile."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     cleared_before_run = []
 
     def check_state(*args, **kwargs):
@@ -109,9 +115,6 @@ def test_schedule_clears_scheduled_start():
 
 def test_cancel_prevents_run():
     """If oven.state is not SCHEDULED when delayed_run wakes, run_profile is never called."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     oven = make_oven('IDLE')  # cancelled before greenlet woke
     profile = make_profile()
     watcher = MagicMock()
@@ -124,9 +127,6 @@ def test_cancel_prevents_run():
 
 def test_past_start_at_fires_immediately():
     """When start_at is in the past (delay <= 0), gevent.sleep is not called."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     oven = make_oven('SCHEDULED')
     profile = make_profile()
     watcher = MagicMock()
@@ -140,9 +140,6 @@ def test_past_start_at_fires_immediately():
 
 def test_future_start_at_sleeps():
     """When start_at is in the future, gevent.sleep is called with the correct duration."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     oven = make_oven('SCHEDULED')
     profile = make_profile()
     watcher = MagicMock()
@@ -155,9 +152,6 @@ def test_future_start_at_sleeps():
 
 def test_watcher_record_called():
     """watcher.record() is called with the profile after a successful run."""
-    _mod_gevent.sleep.reset_mock()
-    _mock_time.time.return_value = 1000.0
-
     oven = make_oven('SCHEDULED')
     profile = make_profile()
     watcher = MagicMock()
