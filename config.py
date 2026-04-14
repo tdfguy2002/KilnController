@@ -36,6 +36,9 @@ temperature_average_samples = 10
 ac_freq_50hz = False
 thermocouple_type = "K"
 pid_control_window = 25   # degrees F
+pid_kp = 3.316850653342161
+pid_ki = 68.06106142939375
+pid_kd = 187.19341216405226
 
 # ----- EMA smoothing for MAX31856 -----
 tc_ema_alpha = 0.2

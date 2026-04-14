@@ -1192,6 +1192,43 @@ body::before {
 }
 
 /* ============================================================
+   PHONE PORTRAIT (≤600px) — hide secondary columns, scale to fit
+   ============================================================ */
+@media (max-width: 600px) {
+    /* Tighten container so columns have more room */
+    .container { padding-left: 8px; padding-right: 8px; }
+
+    /* Nav: shrink text so title + 3 links fit */
+    .kiln-nav { padding: 0 10px; }
+    .kiln-nav-title { font-size: 12px; letter-spacing: 0.08em; }
+    .kiln-nav-link { font-size: 11px; padding: 6px 8px; }
+
+    /* Hide Heat Rate and Time Remaining — still visible on chart/progress bar */
+    .ds-heat-rate { display: none; }
+    .ds-title-panel .ds-title:nth-child(3) { display: none; } /* Heat Rate title */
+    .ds-text { display: none; }   /* Time Remaining value */
+    .ds-title-time { display: none; }
+
+    /* Scale remaining columns: Sensor | Target | Cost | Status */
+    .ds-title-panel { height: 22px; }
+    .ds-title       { font-size: 7px; width: 76px; height: 22px; line-height: 22px; letter-spacing: 0.1em; }
+    .ds-title-cost  { width: 94px; }
+    .ds-title.ds-state { width: 108px; }
+
+    .display   { font-size: 26px; height: 44px; line-height: 44px; padding-right: 6px; }
+    .ds-num    { width: 76px; }
+    .ds-cost   { width: 94px; }
+    .ds-state  { width: 108px; }
+    .ds-unit   { font-size: 11px; line-height: 30px; }
+    .ds-led    { font-size: 22px; height: 44px; width: 22px; line-height: 44px; }
+
+    /* Stack profile selector above start/stop buttons */
+    .panel-heading { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding-bottom: 10px; }
+    #profile_selector { float: none; width: 100%; }
+    #btn_controls { float: none; margin-top: 0; }
+}
+
+/* ============================================================
    SETTINGS MODAL
    ============================================================ */
 
